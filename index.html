@@ -1,179 +1,304 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#17122b">
-  <meta name="description" content="JUNOVABOOK - Réseau social">
-  <title>JUNOVABOOK</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: Arial, sans-serif;
-      min-height: 100vh;
-      background: linear-gradient(145deg, #100d20, #21123d, #32145a);
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 430px;
-      text-align: center;
-    }
-
-    .logo {
-      width: 105px;
-      height: 105px;
-      margin: 0 auto 22px;
-      border-radius: 30px;
-      background: linear-gradient(135deg, #7c3aed, #d946ef, #06b6d4);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 48px;
-      font-weight: bold;
-      box-shadow: 0 15px 40px rgba(0,0,0,.35);
-    }
-
-    h1 {
-      font-size: 38px;
-      letter-spacing: 1px;
-      margin-bottom: 10px;
-    }
-
-    .slogan {
-      font-size: 17px;
-      color: #ddd6fe;
-      margin-bottom: 35px;
-      line-height: 1.5;
-    }
-
-    .card {
-      background: rgba(255,255,255,.09);
-      border: 1px solid rgba(255,255,255,.15);
-      border-radius: 25px;
-      padding: 25px;
-      backdrop-filter: blur(10px);
-    }
-
-    button {
-      width: 100%;
-      border: none;
-      border-radius: 15px;
-      padding: 17px;
-      margin-top: 12px;
-      font-size: 17px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .primary {
-      background: linear-gradient(90deg, #8b5cf6, #d946ef);
-      color: white;
-    }
-
-    .secondary {
-      background: rgba(255,255,255,.12);
-      color: white;
-      border: 1px solid rgba(255,255,255,.2);
-    }
-
-    .language {
-      margin-top: 25px;
-      color: #c4b5fd;
-      font-size: 14px;
-    }
-
-    select {
-      margin-top: 8px;
-      padding: 10px 15px;
-      border-radius: 10px;
-      background: #211936;
-      color: white;
-      border: 1px solid #6d5a9e;
-    }
-
-    footer {
-      margin-top: 25px;
-      color: #aaa;
-      font-size: 12px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#100d20">
+<meta name="description" content="JUNOVABOOK - Le monde s'exprime ici">
+<title>JUNOVABOOK</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;min-height:100vh;background:#100d20;color:white;padding-bottom:85px}
+header{padding:18px 15px;background:#1b1430;border-bottom:1px solid #44335e;position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:46px;height:46px;border-radius:15px;background:linear-gradient(135deg,#7c3aed,#ed4dba,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:25px;font-weight:bold}
+h1{font-size:21px;letter-spacing:1px}
+.tagline{font-size:12px;color:#c9bde5;margin-top:5px}
+main{max-width:650px;margin:auto;padding:15px}
+.panel,.post{background:#211936;border:1px solid #44335e;border-radius:18px;padding:16px;margin-bottom:15px}
+h2{font-size:17px;margin-bottom:12px}
+h3{font-size:15px;margin:12px 0}
+p{line-height:1.5;overflow-wrap:anywhere}
+small{color:#c2b6d8;font-size:12px}
+button,input,textarea{font-family:Arial,sans-serif;font-size:14px}
+button{border:0;border-radius:12px;padding:12px;margin-top:8px;color:white;background:#49366b;font-weight:bold;cursor:pointer}
+.primary{background:linear-gradient(90deg,#7c3aed,#d946ef)}
+.gold{background:#c58a25;color:#1c102b}
+.green{background:#087e68}
+.blue{background:#245fbd}
+.pink{background:#b92b84}
+.orange{background:#b86619}
+.full{width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row button{flex:1}
+.novas{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.novas button{border-radius:50px}
+textarea,input{width:100%;padding:12px;border-radius:11px;border:1px solid #574471;background:#171127;color:white;margin:5px 0 10px}
+textarea{min-height:95px;resize:vertical}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.actions button{flex:1;min-width:90px}
+.stat{display:inline-block;margin:8px 12px 0 0;color:#e5d5ff;font-size:12px}
+.pill{display:inline-block;padding:5px 9px;border-radius:20px;background:#38284f;color:#e8d9ff;font-size:11px}
+.comment{margin:10px 0 0 12px;padding:10px;border-left:2px solid #7655a1;background:#19122a;border-radius:0 10px 10px 0}
+.hidden{display:none!important}
+hr{border:0;border-top:1px solid #44335e;margin:15px 0}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#1b1430;border-top:1px solid #44335e;display:flex;justify-content:space-around;padding:8px 3px;z-index:10}
+.bottom button{flex:1;margin:0 2px;padding:10px 2px;font-size:11px}
+.home{background:#087e8b}
+.friends{background:#b86619}
+.messages{background:#6b3fc2}
+.profile{background:#b92b84}
+footer{text-align:center;color:#8f82a8;font-size:11px;padding:20px}
+</style>
 </head>
-
 <body>
+<header>
+<div class="brand">
+<div class="logo">J</div>
+<div><h1>JUNOVABOOK</h1><div class="tagline">Le monde s'exprime ici.</div></div>
+</div>
+</header>
 
-  <div class="container">
+<main>
+<section id="home">
+<div class="panel">
+<div class="novas">
+<div><h2>✨ NOVAS</h2><small>Fais circuler les idées.</small></div>
+<button class="pink" onclick="toggleNovas()">♥ <span id="novasCount">0</span></button>
+</div>
+<button class="gold full" onclick="showComposer()">✍️ S'EXPRIMER</button>
+<div class="row">
+<button class="primary" onclick="showComposer('publication')">PUBLICATION LIBRE</button>
+<button class="green" onclick="showComposer('debat')">DÉBAT : POUR OU CONTRE</button>
+</div>
+</div>
 
-    <div class="logo">J</div>
+<section id="composer" class="panel hidden">
+<h2 id="composerTitle">Créer une publication</h2>
+<label for="postText">Ton message</label>
+<textarea id="postText" maxlength="5000" placeholder="Exprime tes idées ici..."></textarea>
+<div id="pollFields" class="hidden">
+<label for="optionA">Option A</label>
+<input id="optionA" maxlength="100" placeholder="Ex. Pour">
+<label for="optionB">Option B</label>
+<input id="optionB" maxlength="100" placeholder="Ex. Contre">
+</div>
+<div class="row">
+<button class="primary" onclick="publish()">Publier</button>
+<button onclick="hideComposer()">Annuler</button>
+</div>
+<small>Démo : les publications ne sont pas encore enregistrées en ligne.</small>
+</section>
 
-    <h1>JUNOVABOOK</h1>
+<div class="panel"><h2>🌍 Fil d'actualité</h2><small>Les idées se rencontrent ici.</small></div>
+<div id="feed"></div>
+</section>
 
-    <p class="slogan">
-      Le réseau social qui rapproche les personnes,
-      les idées et les communautés.
-    </p>
+<section id="friends" class="panel hidden">
+<h2>🧡 AMI</h2>
+<p>La découverte de personnes sera développée dans une prochaine étape.</p>
+<input id="friendSearch" placeholder="Rechercher un nom">
+<button class="orange full" onclick="searchFriends()">Rechercher</button>
+</section>
 
-    <div class="card">
+<section id="messages" class="panel hidden">
+<h2>💬 MESSAGES</h2>
+<p>La messagerie privée doit encore être connectée à un service sécurisé.</p>
+<textarea id="draftMessage" placeholder="Préparer un message"></textarea>
+<button class="primary full" onclick="alert('La messagerie en ligne sera activée plus tard.')">Continuer</button>
+</section>
 
-      <button class="primary" onclick="createAccount()">
-        👉 Créer mon compte
-      </button>
+<section id="profile" class="panel hidden">
+<h2>🌺 PROFIL</h2>
+<label for="displayName">Nom affiché</label>
+<input id="displayName" placeholder="Ton nom ou pseudonyme" maxlength="60">
+<button class="pink full" onclick="saveProfile()">Enregistrer le nom</button>
+<hr>
+<h3>Personnaliser l'apparence</h3>
+<label for="accentColor">Couleur des boutons</label>
+<input id="accentColor" type="color" value="#ed4dba">
+<button class="primary full" onclick="applyColor()">Appliquer la couleur</button>
+<hr>
+<h3>Installer JUNOVABOOK</h3>
+<p>Ouvre le menu du navigateur et cherche « Ajouter à l'écran d'accueil », si cette option est disponible.</p>
+<button class="blue full" onclick="alert('Ouvre le menu de ton navigateur et cherche Ajouter à l’écran d’accueil.')">Comment installer ?</button>
+<hr>
+<h3>Compte</h3>
+<button class="full" onclick="alert('La création de compte sécurisée sera connectée plus tard.')">Créer un compte</button>
+<button class="full" onclick="alert('La connexion sera activée après la mise en place de l’authentification.')">Se connecter</button>
+</section>
+</main>
 
-      <button class="secondary" onclick="login()">
-        🔐 Se connecter
-      </button>
+<nav class="bottom">
+<button class="home" onclick="navigate('home')">🏠 ACCUEIL</button>
+<button class="friends" onclick="navigate('friends')">🧡 AMI</button>
+<button class="messages" onclick="navigate('messages')">💬 MESSAGE</button>
+<button class="profile" onclick="navigate('profile')">🌺 PROFIL</button>
+</nav>
 
-      <div class="language">
-        🌍 Choisir la langue
-        <br>
-        <select>
-          <option>Français</option>
-          <option>English</option>
-          <option>Español</option>
-          <option>Português</option>
-          <option>Deutsch</option>
-        </select>
-      </div>
+<footer>© 2026 JUNOVABOOK · Prototype en développement</footer>
 
-    </div>
+<script>
+let composerMode='publication';
+let novas=0;
+let nextId=1;
 
-    <footer>
-      © 2026 JUNOVABOOK
-    </footer>
+const posts=[
+{id:nextId++,type:'publication',name:'JUNOVABOOK',text:'Bienvenue sur JUNOVABOOK ! Ici, chacun peut partager ses idées et échanger dans le respect.',likes:0,comments:[],votes:[0,0],options:[]},
+{id:nextId++,type:'debat',name:'JUNOVABOOK',text:'Faut-il apprendre une nouvelle compétence chaque année ?',likes:0,comments:[],votes:[0,0],options:['Pour','Contre']}
+];
 
-  </div>
+function escapeHTML(value){
+return String(value).replace(/[&<>"']/g,function(c){
+return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+});
+}
 
-  <script>
-    function createAccount() {
-      alert("La création de compte JUNOVABOOK sera disponible prochainement.");
-    }
+function showComposer(mode){
+composerMode=mode||'publication';
+document.getElementById('composer').classList.remove('hidden');
+document.getElementById('composerTitle').textContent=composerMode==='debat'?'Lancer un débat':'Créer une publication';
+document.getElementById('pollFields').classList.toggle('hidden',composerMode!=='debat');
+document.getElementById('postText').focus();
+}
 
-    function login() {
-      alert("La connexion JUNOVABOOK sera disponible prochainement.");
-    }
-  </script>
+function hideComposer(){
+document.getElementById('composer').classList.add('hidden');
+}
 
-  <!-- Appwrite -->
-  <script src="https://cdn.jsdelivr.net/npm/appwrite@21.0.0"></script>
+function publish(){
+const text=document.getElementById('postText').value.trim();
+if(!text){alert('Écris un message avant de publier.');return;}
 
-  <script>
-    const client = new Appwrite.Client();
+let options=[];
+if(composerMode==='debat'){
+options=[
+document.getElementById('optionA').value.trim()||'Pour',
+document.getElementById('optionB').value.trim()||'Contre'
+];
+}
 
-    client
-      .setEndpoint("https://fra.cloud.appwrite.io/v1")
-      .setProject("6ac5feea0027070c3293");
-  </script>
+posts.unshift({
+id:nextId++,
+type:composerMode,
+name:document.getElementById('displayName').value.trim()||'Membre',
+text:text,
+likes:0,
+comments:[],
+votes:[0,0],
+options:options
+});
 
+document.getElementById('postText').value='';
+document.getElementById('optionA').value='';
+document.getElementById('optionB').value='';
+hideComposer();
+renderFeed();
+navigate('home');
+}
+
+function renderComments(comments,postId){
+return comments.map(function(c){
+return '<div class="comment"><strong>'+escapeHTML(c.name)+'</strong><p>'+escapeHTML(c.text)+'</p><button onclick="replyTo('+postId+','+c.id+')">Répondre</button>'+renderComments(c.replies,postId)+'</div>';
+}).join('');
+}
+
+function renderFeed(){
+document.getElementById('feed').innerHTML=posts.map(function(p){
+let poll='';
+if(p.type==='debat'){
+poll='<div class="row"><button class="green" onclick="vote('+p.id+',0)">'+escapeHTML(p.options[0])+' ('+p.votes[0]+')</button><button class="pink" onclick="vote('+p.id+',1)">'+escapeHTML(p.options[1])+' ('+p.votes[1]+')</button></div>';
+}
+return '<article class="post"><span class="pill">'+(p.type==='debat'?'⚖️ DÉBAT':'✍️ PUBLICATION')+'</span><h3>'+escapeHTML(p.name)+'</h3><p>'+escapeHTML(p.text)+'</p>'+poll+'<div class="actions"><button class="pink" onclick="likePost('+p.id+')">♥ LIKER ('+p.likes+')</button><button class="green" onclick="commentPost('+p.id+')">💬 DÉBATTRE</button><button class="blue" onclick="sharePost('+p.id+')">↗ DIFFUSER</button></div><div class="stat">♥ '+p.likes+' réactions</div><div class="stat">💬 '+p.comments.length+' commentaires</div><div>'+renderComments(p.comments,p.id)+'</div></article>';
+}).join('');
+}
+
+function findPost(id){
+return posts.find(function(p){return p.id===id;});
+}
+
+function likePost(id){
+const p=findPost(id);
+if(p){p.likes++;renderFeed();}
+}
+
+function vote(id,index){
+const p=findPost(id);
+if(p){p.votes[index]++;renderFeed();}
+}
+
+function commentPost(id){
+const text=prompt('Écris ton commentaire :');
+if(!text||!text.trim())return;
+const p=findPost(id);
+if(!p)return;
+p.comments.push({id:nextId++,name:document.getElementById('displayName').value.trim()||'Membre',text:text.trim(),replies:[]});
+renderFeed();
+}
+
+function findComment(comments,id){
+for(const c of comments){
+if(c.id===id)return c;
+const found=findComment(c.replies,id);
+if(found)return found;
+}
+return null;
+}
+
+function replyTo(postId,commentId){
+const p=findPost(postId);
+if(!p)return;
+const text=prompt('Écris ta réponse :');
+if(!text||!text.trim())return;
+const parent=findComment(p.comments,commentId);
+if(!parent)return;
+parent.replies.push({id:nextId++,name:document.getElementById('displayName').value.trim()||'Membre',text:text.trim(),replies:[]});
+renderFeed();
+}
+
+function sharePost(id){
+const p=findPost(id);
+if(!p)return;
+const text=p.name+' sur JUNOVABOOK : '+p.text;
+if(navigator.share){
+navigator.share({title:'JUNOVABOOK',text:text}).catch(function(){});
+}else{
+alert(text);
+}
+}
+
+function toggleNovas(){
+novas++;
+document.getElementById('novasCount').textContent=novas;
+}
+
+function navigate(section){
+['home','friends','messages','profile'].forEach(function(id){
+document.getElementById(id).classList.toggle('hidden',id!==section);
+});
+window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function saveProfile(){
+const name=document.getElementById('displayName').value.trim();
+if(!name){alert('Écris d’abord le nom à afficher.');return;}
+alert('Nom choisi pour cette démonstration : '+name);
+}
+
+function applyColor(){
+const color=document.getElementById('accentColor').value;
+document.querySelectorAll('.pink').forEach(function(button){
+button.style.background=color;
+});
+}
+
+function searchFriends(){
+const query=document.getElementById('friendSearch').value.trim();
+if(!query){alert('Écris un nom à rechercher.');return;}
+alert('La recherche en ligne des membres n’est pas encore activée.');
+}
+
+renderFeed();
+</script>
 </body>
-    </html>
+  </html>
