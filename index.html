@@ -13,8 +13,9 @@
 body{font-family:Arial,sans-serif;background:var(--bg);color:white;min-height:100vh;padding-bottom:85px}
 header{margin:12px auto;padding:14px;max-width:680px;background:#1A0B2E;border:1px solid var(--border);border-radius:22px}
 .header-content{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.brand h1{font-size:clamp(18px,5vw,24px);letter-spacing:1px}
-.brand p{font-size:12px;color:#c9bde5;margin-top:5px}
+.brand{flex:1;min-width:0}
+.brand h1{font-size:clamp(25px,7vw,36px);font-weight:900;letter-spacing:1.5px;line-height:1.12;overflow-wrap:anywhere;text-shadow:0 0 12px #ffffff25}
+.brand p{font-size:12px;color:#c9bde5;margin-top:7px}
 .novas-logo{width:94px;flex-shrink:0;display:flex;flex-direction:column;align-items:center}
 .novas-top{width:100%;background:var(--green);border-radius:10px 10px 0 0;padding:10px 4px;text-align:center;font-weight:bold;letter-spacing:1px}
 .novas-stem{width:42px;min-height:53px;background:var(--green);display:flex;align-items:center;justify-content:center;border-radius:0 0 10px 10px}
@@ -35,6 +36,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 .green{background:var(--green)}
 .blue{background:var(--blue)}
 .pink{background:var(--accent)}
+.pink.liked{background:#fff;color:#e83eae;border:2px solid #e83eae}
 .orange{background:#b86619}
 .full{width:100%}
 .row{display:flex;gap:8px;flex-wrap:wrap}
@@ -167,6 +169,7 @@ footer{text-align:center;color:#8f82a8;font-size:11px;padding:20px}
 
 <script>
 const STORAGE_KEY='junovabook-posts-v2';
+const LIKES_KEY='junovabook-my-likes-v1';
 let composerMode='publication';
 let nextId=1;
 let pendingMedia=null;
@@ -190,6 +193,24 @@ function loadPosts(){
 let posts=loadPosts();
 nextId=Math.max(0,...posts.map(p=>Number(p.id)||0))+1;
 
+function loadMyLikes(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(LIKES_KEY)||'[]');
+    return new Set(Array.isArray(raw)?raw.map(String):[]);
+  }catch(e){return new Set()}
+}
+let myLikes=loadMyLikes();
+
+function saveMyLikes(){
+  try{
+    localStorage.setItem(LIKES_KEY,JSON.stringify([...myLikes]));
+    return true;
+  }catch(e){
+    alert("Impossible d'enregistrer tes choix LOVE sur cet appareil.");
+    return false;
+  }
+}
+
 function savePosts(){
   try{
     localStorage.setItem(STORAGE_KEY,JSON.stringify(posts));
@@ -201,7 +222,7 @@ function savePosts(){
 }
 
 function escapeHTML(value){
-  return String(value).replace(/[&<>"']/g,function(c){
+  return String(value??'').replace(/[&<>"']/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
   });
 }
@@ -307,6 +328,7 @@ function renderFeed(){
     return;
   }
   feed.innerHTML=posts.map(function(p){
+    const liked=myLikes.has(String(p.id));
     let poll='';
     if(p.type==='debat'){
       const opts=p.options||['POUR','CONTRE'];
@@ -315,7 +337,7 @@ function renderFeed(){
     }
     const replies=p.comments||[];
     return '<article class="post"><span class="pill">'+(p.type==='debat'?'DÉBAT':'PUBLICATION')+'</span><h3>'+escapeHTML(p.name)+'</h3>'+(p.text?'<p>'+escapeHTML(p.text)+'</p>':'')+mediaHTML(p.media)+poll+
-    '<div class="actions"><button class="pink" onclick="likePost('+p.id+')">LOVES ('+(p.likes||0)+')</button><button class="green" onclick="commentPost('+p.id+')">DÉBATS</button><button class="blue" onclick="sharePost('+p.id+')">DIFFUSIONS</button></div>'+
+    '<div class="actions"><button class="pink '+(liked?'liked':'')+'" aria-pressed="'+liked+'" onclick="likePost('+p.id+')">'+(liked?'♥ RETIRER LOVE':'♥ LOVES')+' ('+(p.likes||0)+')</button><button class="green" onclick="commentPost('+p.id+')">DÉBATS</button><button class="blue" onclick="sharePost('+p.id+')">DIFFUSIONS</button></div>'+
     '<div class="stat">'+(p.likes||0)+' LOVES</div><div class="stat">'+replies.length+' DÉBATS</div><div>'+renderReplies(replies,p.id)+'</div></article>';
   }).join('');
   updateNovas();
@@ -326,14 +348,41 @@ function updateNovas(){
   document.getElementById('novasCount').textContent=total;
 }
 
-function findPost(id){return posts.find(p=>p.id===id);}
+function findPost(id){return posts.find(p=>String(p.id)===String(id));}
 
 function likePost(id){
   const p=findPost(id);
-  if(p){
-    p.likes=(p.likes||0)+1;
-    if(savePosts())renderFeed();
+  if(!p)return;
+
+  const key=String(p.id);
+  const previousLikes=Number(p.likes)||0;
+  const wasLiked=myLikes.has(key);
+
+  if(wasLiked){
+    myLikes.delete(key);
+    p.likes=Math.max(0,previousLikes-1);
+  }else{
+    myLikes.add(key);
+    p.likes=previousLikes+1;
   }
+
+  if(!savePosts()){
+    p.likes=previousLikes;
+    if(wasLiked)myLikes.add(key);
+    else myLikes.delete(key);
+    return;
+  }
+
+  if(!saveMyLikes()){
+    // Revenir à l'état précédent si le choix personnel ne peut pas être enregistré.
+    p.likes=previousLikes;
+    if(wasLiked)myLikes.add(key);
+    else myLikes.delete(key);
+    savePosts();
+    renderFeed();
+    return;
+  }
+  renderFeed();
 }
 
 function vote(id,index){
@@ -362,7 +411,7 @@ function commentPost(id){
 
 function findComment(comments,id){
   for(const c of comments||[]){
-    if(c.id===id)return c;
+    if(String(c.id)===String(id))return c;
     const found=findComment(c.replies,id);
     if(found)return found;
   }
@@ -436,8 +485,9 @@ function searchFriends(){
 function clearLocalPosts(){
   if(!confirm('Effacer toutes les publications enregistrées sur cet appareil ? Cette action ne peut pas être annulée.'))return;
   posts=[];
-  savePosts();
-  renderFeed();
+  myLikes.clear();
+  try{localStorage.setItem(LIKES_KEY,'[]');}catch(e){}
+  if(savePosts())renderFeed();
 }
 
 try{
