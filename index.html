@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#1A0B2E">
 <meta name="description" content="JUNOVABOOK — Le monde s'exprime ici">
 <title>JUNOVABOOK</title>
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#100d20;--panel:#211936;--border:#44335e;--green:#1B6B5A;--pink:#e83eae;--blue:#245fbd;--accent:#ed4dba}
@@ -64,8 +65,13 @@ footer{text-align:center;color:#8f82a8;font-size:11px;padding:20px}
 .empty{padding:15px;text-align:center;color:#c9bde5}
 .danger{background:#7d263e}
 .file-note{font-size:12px;color:#c9bde5;margin-top:5px}
+.vote-selected{outline:2px solid white;box-shadow:0 0 0 2px #9a75d1}
+.tier{border:1px solid var(--border);padding:12px;border-radius:12px;margin:10px 0}
+.tier h3{margin:0 0 6px}
+.tier p{font-size:13px}
 </style>
 </head>
+
 <body>
 <header>
   <div class="header-content">
@@ -87,8 +93,10 @@ footer{text-align:center;color:#8f82a8;font-size:11px;padding:20px}
   <div class="panel">
     <h2>✨ L'espace NOVAS</h2>
     <p>Fais circuler les idées et découvre les échanges de la communauté.</p>
-    <button class="gold full" onclick="showComposer('publication')">S'EXPRIMER</button>
-    <div class="row">
+
+    <button class="gold full" onclick="toggleExpression()" aria-expanded="false" id="expressionButton">S'EXPRIMER</button>
+
+    <div id="expressionChoices" class="row hidden">
       <button class="primary" onclick="showComposer('publication')">PUBLICATION LIBRE</button>
       <button class="green" onclick="showComposer('debat')">LANCER UN DÉBAT</button>
     </div>
@@ -98,15 +106,18 @@ footer{text-align:center;color:#8f82a8;font-size:11px;padding:20px}
     <h2 id="composerTitle">Créer une publication</h2>
     <label for="postText">Ton message</label>
     <textarea id="postText" maxlength="5000" placeholder="Exprime tes idées ici..."></textarea>
-    <label for="postMedia">Ajouter une photo ou une vidéo (facultatif)</label>
-    <input id="postMedia" type="file" accept="image/*,video/*">
-    <p class="file-note">Prototype : le média est gardé sur cet appareil seulement et peut être perdu si les données du navigateur sont effacées.</p>
+
+    <label for="postMedia">Ajouter des photos (maximum 4) ou une vidéo</label>
+    <input id="postMedia" type="file" accept="image/*,video/*" multiple>
+    <p class="file-note">Tu peux choisir jusqu'à 4 photos. Pour une vidéo, sélectionne une seule vidéo. Les médias restent sur cet appareil dans cette démonstration.</p>
+
     <div id="pollFields" class="hidden">
       <label for="optionA">Premier choix</label>
       <input id="optionA" maxlength="100" placeholder="Ex. Pour">
       <label for="optionB">Deuxième choix</label>
       <input id="optionB" maxlength="100" placeholder="Ex. Contre">
     </div>
+
     <div class="row">
       <button class="primary" onclick="publish()">Publier</button>
       <button onclick="hideComposer()">Annuler</button>
@@ -115,7 +126,7 @@ footer{text-align:center;color:#8f82a8;font-size:11px;padding:20px}
 
   <div class="panel">
     <h2>🌍 Fil d'actualité</h2>
-    <small>Les idées se rencontrent ici. Cette démonstration est enregistrée sur cet appareil.</small>
+    <small>Les publications de cette démonstration sont enregistrées sur cet appareil.</small>
   </div>
   <div id="feed"></div>
 </section>
@@ -139,21 +150,41 @@ footer{text-align:center;color:#8f82a8;font-size:11px;padding:20px}
   <label for="displayName">Nom affiché</label>
   <input id="displayName" maxlength="60" placeholder="Ton nom ou pseudonyme">
   <button class="pink full" onclick="saveProfile()">Enregistrer le nom</button>
+
   <hr>
   <h3>PARAMÈTRES → APPARENCE</h3>
   <label for="accentColor">Couleur personnelle des boutons LOVES</label>
   <input id="accentColor" type="color" value="#ed4dba">
   <button class="primary full" onclick="applyColor()">Appliquer ma couleur</button>
-  <p class="notice">La préférence est enregistrée sur cet appareil pour cette démonstration. La synchronisation par compte viendra avec le service en ligne.</p>
+  <p class="notice">La préférence est enregistrée sur cet appareil. La synchronisation par compte viendra avec le service en ligne.</p>
+
+  <hr>
+  <h3>Accès JUNOVABOOK</h3>
+  <div class="tier">
+    <h3>🌱 JUNOVA LIBRE</h3>
+    <p>Accès gratuit au prototype et à ses fonctions actuellement disponibles.</p>
+  </div>
+  <div class="tier">
+    <h3>✨ JUNOVA PLUS</h3>
+    <p>Accès avancé à définir, notamment pour les médias et fonctions supplémentaires.</p>
+  </div>
+  <div class="tier">
+    <h3>🚀 JUNOVA PRO</h3>
+    <p>Accès aux fonctions les plus avancées, à définir lors de la prochaine étape.</p>
+  </div>
+  <p class="notice">Ces niveaux sont présentés pour préparer l'organisation des accès. Ils ne sont pas encore reliés à des comptes, à des paiements ou à des restrictions sécurisées.</p>
+
   <hr>
   <h3>Installer JUNOVABOOK</h3>
-  <p>Tu peux ajouter JUNOVABOOK à l'écran d'accueil depuis le menu de ton navigateur. L'installation reste facultative.</p>
-  <button class="blue full" onclick="installHelp()">👉 INSTALLER JUNOVABOOK</button>
+  <p>Sur un navigateur compatible, tu peux installer le site ou l'ajouter à l'écran d'accueil.</p>
+  <button class="blue full" onclick="installApp()">👉 INSTALLER JUNOVABOOK</button>
+
   <hr>
   <h3>Compte</h3>
   <p class="notice">Les comptes sécurisés par numéro, mot de passe et code de récupération ne sont pas encore activés. Ne saisis pas de vrai mot de passe dans cette démonstration.</p>
   <button class="full" onclick="alert('La création de compte sera activée après la mise en place du service sécurisé.')">Créer un compte</button>
   <button class="full" onclick="alert('La connexion sera activée après la mise en place du service sécurisé.')">Se connecter</button>
+
   <hr>
   <button class="danger full" onclick="clearLocalPosts()">Effacer les publications de cet appareil</button>
 </section>
@@ -165,14 +196,19 @@ footer{text-align:center;color:#8f82a8;font-size:11px;padding:20px}
   <button class="messages" onclick="navigate('messages')">MESSAGE</button>
   <button class="profile" onclick="navigate('profile')">PROFIL</button>
 </nav>
+
 <footer>© 2026 JUNOVABOOK · Prototype en développement</footer>
 
 <script>
 const STORAGE_KEY='junovabook-posts-v2';
 const LIKES_KEY='junovabook-my-likes-v1';
+const VOTES_KEY='junovabook-my-votes-v1';
+const SITE_URL='https://emmanuel-jsk.github.io/junovabook-/';
+
 let composerMode='publication';
 let nextId=1;
-let pendingMedia=null;
+let pendingMedia=[];
+let installPrompt=null;
 
 const starterPosts=[
 {id:1,type:'publication',name:'JUNOVABOOK',text:'Bienvenue sur JUNOVABOOK ! Ici, chacun peut partager ses idées et échanger dans le respect.',media:null,likes:0,comments:[],votes:[0,0],options:[]},
@@ -191,7 +227,22 @@ function loadPosts(){
 }
 
 let posts=loadPosts();
-nextId=Math.max(0,...posts.map(p=>Number(p.id)||0))+1;
+
+function updateNextId(){
+  let max=0;
+  posts.forEach(function(p){
+    max=Math.max(max,Number(p.id)||0);
+    function scan(comments){
+      (comments||[]).forEach(function(c){
+        max=Math.max(max,Number(c.id)||0);
+        scan(c.replies);
+      });
+    }
+    scan(p.comments);
+  });
+  nextId=max+1;
+}
+updateNextId();
 
 function loadMyLikes(){
   try{
@@ -200,6 +251,14 @@ function loadMyLikes(){
   }catch(e){return new Set()}
 }
 let myLikes=loadMyLikes();
+
+function loadMyVotes(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(VOTES_KEY)||'{}');
+    return raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
+  }catch(e){return {}}
+}
+let myVotes=loadMyVotes();
 
 function saveMyLikes(){
   try{
@@ -211,12 +270,22 @@ function saveMyLikes(){
   }
 }
 
+function saveMyVotes(){
+  try{
+    localStorage.setItem(VOTES_KEY,JSON.stringify(myVotes));
+    return true;
+  }catch(e){
+    alert("Impossible d'enregistrer ton vote sur cet appareil.");
+    return false;
+  }
+}
+
 function savePosts(){
   try{
     localStorage.setItem(STORAGE_KEY,JSON.stringify(posts));
     return true;
   }catch(e){
-    alert('Le stockage de cet appareil est plein ou indisponible. Essaie une photo/vidéo plus petite, ou retire le média.');
+    alert("Le stockage de cet appareil est plein ou indisponible. Essaie des médias plus petits.");
     return false;
   }
 }
@@ -227,9 +296,17 @@ function escapeHTML(value){
   });
 }
 
+function toggleExpression(){
+  const choices=document.getElementById('expressionChoices');
+  const button=document.getElementById('expressionButton');
+  const opening=choices.classList.contains('hidden');
+  choices.classList.toggle('hidden',!opening);
+  button.setAttribute('aria-expanded',String(opening));
+}
+
 function showComposer(mode){
   composerMode=mode||'publication';
-  pendingMedia=null;
+  pendingMedia=[];
   document.getElementById('postMedia').value='';
   document.getElementById('composer').classList.remove('hidden');
   document.getElementById('composerTitle').textContent=composerMode==='debat'?'Lancer un débat':'Créer une publication';
@@ -239,39 +316,73 @@ function showComposer(mode){
 
 function hideComposer(){
   document.getElementById('composer').classList.add('hidden');
-  pendingMedia=null;
+  pendingMedia=[];
+  document.getElementById('postMedia').value='';
 }
 
-document.getElementById('postMedia').addEventListener('change',function(){
-  const file=this.files&&this.files[0];
-  pendingMedia=null;
-  if(!file)return;
-  if(!file.type.startsWith('image/')&&!file.type.startsWith('video/')){
-    alert('Choisis une image ou une vidéo.');
+document.getElementById('postMedia').addEventListener('change',async function(){
+  const files=Array.from(this.files||[]);
+  pendingMedia=[];
+
+  if(!files.length)return;
+
+  const videos=files.filter(f=>f.type.startsWith('video/'));
+  const images=files.filter(f=>f.type.startsWith('image/'));
+
+  if(files.some(f=>!f.type.startsWith('image/')&&!f.type.startsWith('video/'))){
+    alert('Choisis uniquement des photos ou une vidéo.');
     this.value='';
     return;
   }
-  if(file.size>900*1024){
-    alert('Pour cette démonstration, choisis un média de moins de 900 Ko afin de limiter le stockage.');
+
+  if(videos.length&&(videos.length!==1||files.length!==1)){
+    alert('Choisis soit une seule vidéo, soit jusqu’à quatre photos.');
     this.value='';
     return;
   }
-  const reader=new FileReader();
-  reader.onload=function(){
-    pendingMedia={type:file.type.startsWith('video/')?'video':'image',src:reader.result,name:file.name};
-  };
-  reader.onerror=function(){
-    alert('Impossible de lire ce fichier. Essaie un autre média.');
-  };
-  reader.readAsDataURL(file);
+
+  if(images.length>4){
+    alert('Tu peux sélectionner quatre photos maximum.');
+    this.value='';
+    return;
+  }
+
+  if(files.some(f=>f.size>900*1024)){
+    alert('Chaque média doit faire moins de 900 Ko dans cette démonstration.');
+    this.value='';
+    return;
+  }
+
+  try{
+    const loaded=await Promise.all(files.map(function(file){
+      return new Promise(function(resolve,reject){
+        const reader=new FileReader();
+        reader.onload=function(){
+          resolve({
+            type:file.type.startsWith('video/')?'video':'image',
+            src:reader.result,
+            name:file.name
+          });
+        };
+        reader.onerror=function(){reject(new Error('Lecture impossible'));};
+        reader.readAsDataURL(file);
+      });
+    }));
+    pendingMedia=loaded;
+  }catch(e){
+    pendingMedia=[];
+    this.value='';
+    alert('Impossible de lire un des fichiers. Essaie de nouveau.');
+  }
 });
 
 function publish(){
   const text=document.getElementById('postText').value.trim();
-  if(!text&&!pendingMedia){
+  if(!text&&!pendingMedia.length){
     alert('Écris un message ou ajoute une photo/vidéo avant de publier.');
     return;
   }
+
   let options=[];
   if(composerMode==='debat'){
     options=[
@@ -279,28 +390,31 @@ function publish(){
       document.getElementById('optionB').value.trim()||'CONTRE'
     ];
   }
+
   const item={
     id:nextId++,
     type:composerMode,
     name:document.getElementById('displayName').value.trim()||'Membre',
     text:text,
-    media:pendingMedia,
+    media:pendingMedia.length?pendingMedia.slice():null,
     likes:0,
     comments:[],
     votes:[0,0],
     options:options
   };
+
   posts.unshift(item);
   if(!savePosts()){
     posts.shift();
     nextId--;
     return;
   }
+
   document.getElementById('postText').value='';
   document.getElementById('optionA').value='';
   document.getElementById('optionB').value='';
   document.getElementById('postMedia').value='';
-  pendingMedia=null;
+  pendingMedia=[];
   hideComposer();
   renderFeed();
   navigate('home');
@@ -313,11 +427,15 @@ function renderReplies(replies,postId){
 }
 
 function mediaHTML(media){
-  if(!media||!media.src)return '';
-  if(media.type==='video'){
-    return '<video class="media-preview" controls preload="metadata" src="'+media.src+'">Ton navigateur ne peut pas lire cette vidéo.</video>';
-  }
-  return '<img class="media-preview" src="'+media.src+'" alt="Photo publiée">';
+  if(!media)return '';
+  const list=Array.isArray(media)?media:[media];
+  return list.map(function(item){
+    if(!item||!item.src)return '';
+    if(item.type==='video'){
+      return '<video class="media-preview" controls preload="metadata" src="'+item.src+'">Ton navigateur ne peut pas lire cette vidéo.</video>';
+    }
+    return '<img class="media-preview" src="'+item.src+'" alt="Photo publiée" loading="lazy">';
+  }).join('');
 }
 
 function renderFeed(){
@@ -327,19 +445,31 @@ function renderFeed(){
     updateNovas();
     return;
   }
+
   feed.innerHTML=posts.map(function(p){
     const liked=myLikes.has(String(p.id));
     let poll='';
+
     if(p.type==='debat'){
       const opts=p.options||['POUR','CONTRE'];
-      const votes=p.votes||[0,0];
-      poll='<div class="row"><button class="green" onclick="vote('+p.id+',0)">'+escapeHTML(opts[0]||'POUR')+' ('+(votes[0]||0)+')</button><button class="pink" onclick="vote('+p.id+',1)">'+escapeHTML(opts[1]||'CONTRE')+' ('+(votes[1]||0)+')</button></div>';
+      p.votes=p.votes||[0,0];
+      const myVote=myVotes[String(p.id)];
+      poll='<div class="row">'+
+        '<button class="green '+(myVote===0?'vote-selected':'')+'" aria-pressed="'+(myVote===0)+'" onclick="vote('+p.id+',0)">'+escapeHTML(opts[0]||'POUR')+' ('+(Number(p.votes[0])||0)+')</button>'+
+        '<button class="pink '+(myVote===1?'vote-selected':'')+'" aria-pressed="'+(myVote===1)+'" onclick="vote('+p.id+',1)">'+escapeHTML(opts[1]||'CONTRE')+' ('+(Number(p.votes[1])||0)+')</button>'+
+      '</div><small>Appuie une deuxième fois sur ton choix pour retirer ton vote.</small>';
     }
+
     const replies=p.comments||[];
-    return '<article class="post"><span class="pill">'+(p.type==='debat'?'DÉBAT':'PUBLICATION')+'</span><h3>'+escapeHTML(p.name)+'</h3>'+(p.text?'<p>'+escapeHTML(p.text)+'</p>':'')+mediaHTML(p.media)+poll+
-    '<div class="actions"><button class="pink '+(liked?'liked':'')+'" aria-pressed="'+liked+'" onclick="likePost('+p.id+')">'+(liked?'♥ RETIRER LOVE':'♥ LOVES')+' ('+(p.likes||0)+')</button><button class="green" onclick="commentPost('+p.id+')">DÉBATS</button><button class="blue" onclick="sharePost('+p.id+')">DIFFUSIONS</button></div>'+
-    '<div class="stat">'+(p.likes||0)+' LOVES</div><div class="stat">'+replies.length+' DÉBATS</div><div>'+renderReplies(replies,p.id)+'</div></article>';
+    return '<article class="post" id="post-'+p.id+'"><span class="pill">'+(p.type==='debat'?'DÉBAT':'PUBLICATION')+'</span><h3>'+escapeHTML(p.name)+'</h3>'+
+      (p.text?'<p>'+escapeHTML(p.text)+'</p>':'')+
+      mediaHTML(p.media)+poll+
+      '<div class="actions"><button class="pink '+(liked?'liked':'')+'" aria-pressed="'+liked+'" onclick="likePost('+p.id+')">'+(liked?'♥ RETIRER LOVE':'♥ LOVES')+' ('+(Number(p.likes)||0)+')</button>'+
+      '<button class="green" onclick="commentPost('+p.id+')">DÉBATS</button>'+
+      '<button class="blue" onclick="sharePost('+p.id+')">DIFFUSIONS</button></div>'+
+      '<div class="stat">'+(Number(p.likes)||0)+' LOVES</div><div class="stat">'+replies.length+' DÉBATS</div><div>'+renderReplies(replies,p.id)+'</div></article>';
   }).join('');
+
   updateNovas();
 }
 
@@ -348,7 +478,9 @@ function updateNovas(){
   document.getElementById('novasCount').textContent=total;
 }
 
-function findPost(id){return posts.find(p=>String(p.id)===String(id));}
+function findPost(id){
+  return posts.find(p=>String(p.id)===String(id));
+}
 
 function likePost(id){
   const p=findPost(id);
@@ -374,7 +506,6 @@ function likePost(id){
   }
 
   if(!saveMyLikes()){
-    // Revenir à l'état précédent si le choix personnel ne peut pas être enregistré.
     p.likes=previousLikes;
     if(wasLiked)myLikes.add(key);
     else myLikes.delete(key);
@@ -382,16 +513,49 @@ function likePost(id){
     renderFeed();
     return;
   }
+
   renderFeed();
 }
 
 function vote(id,index){
   const p=findPost(id);
-  if(p){
-    p.votes=p.votes||[0,0];
-    p.votes[index]=(p.votes[index]||0)+1;
-    if(savePosts())renderFeed();
+  if(!p||p.type!=='debat'||(index!==0&&index!==1))return;
+
+  p.votes=Array.isArray(p.votes)?p.votes:[0,0];
+  p.votes[0]=Math.max(0,Number(p.votes[0])||0);
+  p.votes[1]=Math.max(0,Number(p.votes[1])||0);
+
+  const key=String(p.id);
+  const oldVote=myVotes[key];
+  const oldVotes=p.votes.slice();
+  const oldMyVotes={...myVotes};
+
+  if(oldVote===index){
+    p.votes[index]=Math.max(0,p.votes[index]-1);
+    delete myVotes[key];
+  }else{
+    if(oldVote===0||oldVote===1){
+      p.votes[oldVote]=Math.max(0,p.votes[oldVote]-1);
+    }
+    p.votes[index]+=1;
+    myVotes[key]=index;
   }
+
+  if(!savePosts()){
+    p.votes=oldVotes;
+    myVotes=oldMyVotes;
+    return;
+  }
+
+  if(!saveMyVotes()){
+    p.votes=oldVotes;
+    myVotes=oldMyVotes;
+    savePosts();
+    renderFeed();
+    return;
+  }
+
+  renderFeed();
 }
 
 function commentPost(id){
@@ -399,6 +563,7 @@ function commentPost(id){
   if(!text||!text.trim())return;
   const p=findPost(id);
   if(!p)return;
+
   p.comments=p.comments||[];
   p.comments.push({
     id:nextId++,
@@ -406,6 +571,7 @@ function commentPost(id){
     text:text.trim(),
     replies:[]
   });
+
   if(savePosts())renderFeed();
 }
 
@@ -421,10 +587,13 @@ function findComment(comments,id){
 function replyTo(postId,commentId){
   const p=findPost(postId);
   if(!p)return;
+
   const text=prompt('Écris ta réponse dans le débat :');
   if(!text||!text.trim())return;
+
   const parent=findComment(p.comments,commentId);
   if(!parent)return;
+
   parent.replies=parent.replies||[];
   parent.replies.push({
     id:nextId++,
@@ -432,18 +601,24 @@ function replyTo(postId,commentId){
     text:text.trim(),
     replies:[]
   });
+
   if(savePosts())renderFeed();
 }
 
 function sharePost(id){
   const p=findPost(id);
   if(!p)return;
-  const text=(p.name||'Membre')+' sur JUNOVABOOK : '+(p.text||'Découvre cette publication sur JUNOVABOOK');
-  if(navigator.share){
-    navigator.share({title:'JUNOVABOOK',text:text}).catch(function(){});
-  }else{
-    prompt('Copie ce texte pour le diffuser :',text);
-  }
+
+  const postURL=SITE_URL+'#post-'+encodeURIComponent(p.id);
+  const media=Array.isArray(p.media)?p.media:(p.media?[p.media]:[]);
+  const mediaNote=media.length?' · '+media.length+' média(s)':'';
+  const text=(p.name||'Membre')+' sur JUNOVABOOK :\n'+
+    (p.text||'Découvre cette publication sur JUNOVABOOK')+
+    mediaNote+'\n\nDécouvre JUNOVABOOK : '+postURL+
+    '\n\nNote : ce prototype ne synchronise pas encore les publications entre appareils.';
+
+  const whatsappURL='https://wa.me/?text='+encodeURIComponent(text);
+  window.open(whatsappURL,'_blank','noopener,noreferrer');
 }
 
 function navigate(section){
@@ -459,6 +634,7 @@ function saveProfile(){
     alert('Écris d’abord le nom à afficher.');
     return;
   }
+
   try{localStorage.setItem('junovabook-name',name);}catch(e){}
   alert('Nom enregistré sur cet appareil pour cette démonstration.');
 }
@@ -469,8 +645,20 @@ function applyColor(){
   try{localStorage.setItem('junovabook-accent',color);}catch(e){}
 }
 
-function installHelp(){
-  alert('Pour installer JUNOVABOOK : ouvre le menu de Firefox ou de ton navigateur, puis cherche « Ajouter à l’écran d’accueil ». L’installation est facultative.');
+window.addEventListener('beforeinstallprompt',function(event){
+  event.preventDefault();
+  installPrompt=event;
+});
+
+async function installApp(){
+  if(installPrompt){
+    installPrompt.prompt();
+    try{await installPrompt.userChoice;}catch(e){}
+    installPrompt=null;
+    return;
+  }
+
+  alert('Pour préparer l’installation : ouvre le menu de Firefox ou de ton navigateur et cherche « Ajouter à l’écran d’accueil » ou « Installer ». Si cette option ne s’affiche pas, l’installation automatique nécessite encore les fichiers PWA complémentaires.');
 }
 
 function searchFriends(){
@@ -484,15 +672,23 @@ function searchFriends(){
 
 function clearLocalPosts(){
   if(!confirm('Effacer toutes les publications enregistrées sur cet appareil ? Cette action ne peut pas être annulée.'))return;
+
   posts=[];
   myLikes.clear();
-  try{localStorage.setItem(LIKES_KEY,'[]');}catch(e){}
+  myVotes={};
+
+  try{
+    localStorage.setItem(LIKES_KEY,'[]');
+    localStorage.setItem(VOTES_KEY,'{}');
+  }catch(e){}
+
   if(savePosts())renderFeed();
 }
 
 try{
   const savedColor=localStorage.getItem('junovabook-accent');
   const savedName=localStorage.getItem('junovabook-name');
+
   if(savedColor){
     document.documentElement.style.setProperty('--accent',savedColor);
     document.getElementById('accentColor').value=savedColor;
