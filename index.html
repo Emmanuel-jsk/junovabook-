@@ -1,304 +1,456 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#100d20">
-<meta name="description" content="JUNOVABOOK - Le monde s'exprime ici">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1A0B2E">
+<meta name="description" content="JUNOVABOOK — Le monde s'exprime ici">
 <title>JUNOVABOOK</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,sans-serif;min-height:100vh;background:#100d20;color:white;padding-bottom:85px}
-header{padding:18px 15px;background:#1b1430;border-bottom:1px solid #44335e;position:sticky;top:0;z-index:5}
-.brand{display:flex;align-items:center;gap:12px}
-.logo{width:46px;height:46px;border-radius:15px;background:linear-gradient(135deg,#7c3aed,#ed4dba,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:25px;font-weight:bold}
-h1{font-size:21px;letter-spacing:1px}
-.tagline{font-size:12px;color:#c9bde5;margin-top:5px}
-main{max-width:650px;margin:auto;padding:15px}
-.panel,.post{background:#211936;border:1px solid #44335e;border-radius:18px;padding:16px;margin-bottom:15px}
+:root{--bg:#100d20;--panel:#211936;--border:#44335e;--green:#1B6B5A;--pink:#e83eae;--blue:#245fbd;--accent:#ed4dba}
+body{font-family:Arial,sans-serif;background:var(--bg);color:white;min-height:100vh;padding-bottom:85px}
+header{margin:12px auto;padding:14px;max-width:680px;background:#1A0B2E;border:1px solid var(--border);border-radius:22px}
+.header-content{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand h1{font-size:clamp(18px,5vw,24px);letter-spacing:1px}
+.brand p{font-size:12px;color:#c9bde5;margin-top:5px}
+.novas-logo{width:94px;flex-shrink:0;display:flex;flex-direction:column;align-items:center}
+.novas-top{width:100%;background:var(--green);border-radius:10px 10px 0 0;padding:10px 4px;text-align:center;font-weight:bold;letter-spacing:1px}
+.novas-stem{width:42px;min-height:53px;background:var(--green);display:flex;align-items:center;justify-content:center;border-radius:0 0 10px 10px}
+.novas-heart{position:relative;color:var(--pink);font-size:31px;line-height:1}
+.novas-number{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold}
+main{max-width:680px;margin:auto;padding:10px 14px}
+.panel,.post{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:15px}
 h2{font-size:17px;margin-bottom:12px}
 h3{font-size:15px;margin:12px 0}
 p{line-height:1.5;overflow-wrap:anywhere}
 small{color:#c2b6d8;font-size:12px}
-button,input,textarea{font-family:Arial,sans-serif;font-size:14px}
-button{border:0;border-radius:12px;padding:12px;margin-top:8px;color:white;background:#49366b;font-weight:bold;cursor:pointer}
+label{display:block;margin:8px 0;font-size:13px}
+button,input,textarea{font:inherit}
+button{border:0;border-radius:12px;padding:12px;margin-top:8px;color:white;background:#49366b;font-size:13px;font-weight:bold;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .primary{background:linear-gradient(90deg,#7c3aed,#d946ef)}
 .gold{background:#c58a25;color:#1c102b}
-.green{background:#087e68}
-.blue{background:#245fbd}
-.pink{background:#b92b84}
+.green{background:var(--green)}
+.blue{background:var(--blue)}
+.pink{background:var(--accent)}
 .orange{background:#b86619}
 .full{width:100%}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .row button{flex:1}
-.novas{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.novas button{border-radius:50px}
-textarea,input{width:100%;padding:12px;border-radius:11px;border:1px solid #574471;background:#171127;color:white;margin:5px 0 10px}
-textarea{min-height:95px;resize:vertical}
 .actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
 .actions button{flex:1;min-width:90px}
 .stat{display:inline-block;margin:8px 12px 0 0;color:#e5d5ff;font-size:12px}
 .pill{display:inline-block;padding:5px 9px;border-radius:20px;background:#38284f;color:#e8d9ff;font-size:11px}
-.comment{margin:10px 0 0 12px;padding:10px;border-left:2px solid #7655a1;background:#19122a;border-radius:0 10px 10px 0}
+.reply{margin:10px 0 0 12px;padding:10px;border-left:2px solid #7655a1;background:#19122a;border-radius:0 10px 10px 0}
 .hidden{display:none!important}
-hr{border:0;border-top:1px solid #44335e;margin:15px 0}
-.bottom{position:fixed;bottom:0;left:0;right:0;background:#1b1430;border-top:1px solid #44335e;display:flex;justify-content:space-around;padding:8px 3px;z-index:10}
+hr{border:0;border-top:1px solid var(--border);margin:15px 0}
+textarea,input:not([type=color]):not([type=file]){width:100%;padding:12px;border-radius:11px;border:1px solid #574471;background:#171127;color:white;margin:5px 0 10px}
+textarea{min-height:95px;resize:vertical}
+input[type=color]{width:100%;height:45px;border:0;background:transparent}
+input[type=file]{width:100%;margin:8px 0;color:#ddd}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#1b1430;border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 3px;z-index:10}
 .bottom button{flex:1;margin:0 2px;padding:10px 2px;font-size:11px}
 .home{background:#087e8b}
 .friends{background:#b86619}
 .messages{background:#6b3fc2}
 .profile{background:#b92b84}
 footer{text-align:center;color:#8f82a8;font-size:11px;padding:20px}
+.notice{font-size:12px;color:#c9bde5;line-height:1.5;margin-top:10px}
+.media-preview{display:block;width:100%;max-height:360px;object-fit:contain;background:#120d20;border-radius:12px;margin-top:10px}
+.empty{padding:15px;text-align:center;color:#c9bde5}
+.danger{background:#7d263e}
+.file-note{font-size:12px;color:#c9bde5;margin-top:5px}
 </style>
 </head>
 <body>
 <header>
-<div class="brand">
-<div class="logo">J</div>
-<div><h1>JUNOVABOOK</h1><div class="tagline">Le monde s'exprime ici.</div></div>
-</div>
+  <div class="header-content">
+    <div class="brand">
+      <h1>JUNOVABOOK</h1>
+      <p>Le monde s'exprime ici</p>
+    </div>
+    <div class="novas-logo" aria-label="NOVAS, compteur LOVES">
+      <div class="novas-top">NOVAS</div>
+      <div class="novas-stem">
+        <span class="novas-heart">♥<span class="novas-number" id="novasCount">0</span></span>
+      </div>
+    </div>
+  </div>
 </header>
 
 <main>
 <section id="home">
-<div class="panel">
-<div class="novas">
-<div><h2>✨ NOVAS</h2><small>Fais circuler les idées.</small></div>
-<button class="pink" onclick="toggleNovas()">♥ <span id="novasCount">0</span></button>
-</div>
-<button class="gold full" onclick="showComposer()">✍️ S'EXPRIMER</button>
-<div class="row">
-<button class="primary" onclick="showComposer('publication')">PUBLICATION LIBRE</button>
-<button class="green" onclick="showComposer('debat')">DÉBAT : POUR OU CONTRE</button>
-</div>
-</div>
+  <div class="panel">
+    <h2>✨ L'espace NOVAS</h2>
+    <p>Fais circuler les idées et découvre les échanges de la communauté.</p>
+    <button class="gold full" onclick="showComposer('publication')">S'EXPRIMER</button>
+    <div class="row">
+      <button class="primary" onclick="showComposer('publication')">PUBLICATION LIBRE</button>
+      <button class="green" onclick="showComposer('debat')">LANCER UN DÉBAT</button>
+    </div>
+  </div>
 
-<section id="composer" class="panel hidden">
-<h2 id="composerTitle">Créer une publication</h2>
-<label for="postText">Ton message</label>
-<textarea id="postText" maxlength="5000" placeholder="Exprime tes idées ici..."></textarea>
-<div id="pollFields" class="hidden">
-<label for="optionA">Option A</label>
-<input id="optionA" maxlength="100" placeholder="Ex. Pour">
-<label for="optionB">Option B</label>
-<input id="optionB" maxlength="100" placeholder="Ex. Contre">
-</div>
-<div class="row">
-<button class="primary" onclick="publish()">Publier</button>
-<button onclick="hideComposer()">Annuler</button>
-</div>
-<small>Démo : les publications ne sont pas encore enregistrées en ligne.</small>
-</section>
+  <section id="composer" class="panel hidden">
+    <h2 id="composerTitle">Créer une publication</h2>
+    <label for="postText">Ton message</label>
+    <textarea id="postText" maxlength="5000" placeholder="Exprime tes idées ici..."></textarea>
+    <label for="postMedia">Ajouter une photo ou une vidéo (facultatif)</label>
+    <input id="postMedia" type="file" accept="image/*,video/*">
+    <p class="file-note">Prototype : le média est gardé sur cet appareil seulement et peut être perdu si les données du navigateur sont effacées.</p>
+    <div id="pollFields" class="hidden">
+      <label for="optionA">Premier choix</label>
+      <input id="optionA" maxlength="100" placeholder="Ex. Pour">
+      <label for="optionB">Deuxième choix</label>
+      <input id="optionB" maxlength="100" placeholder="Ex. Contre">
+    </div>
+    <div class="row">
+      <button class="primary" onclick="publish()">Publier</button>
+      <button onclick="hideComposer()">Annuler</button>
+    </div>
+  </section>
 
-<div class="panel"><h2>🌍 Fil d'actualité</h2><small>Les idées se rencontrent ici.</small></div>
-<div id="feed"></div>
+  <div class="panel">
+    <h2>🌍 Fil d'actualité</h2>
+    <small>Les idées se rencontrent ici. Cette démonstration est enregistrée sur cet appareil.</small>
+  </div>
+  <div id="feed"></div>
 </section>
 
 <section id="friends" class="panel hidden">
-<h2>🧡 AMI</h2>
-<p>La découverte de personnes sera développée dans une prochaine étape.</p>
-<input id="friendSearch" placeholder="Rechercher un nom">
-<button class="orange full" onclick="searchFriends()">Rechercher</button>
+  <h2>AMI</h2>
+  <p>La découverte de personnes sera développée dans une prochaine étape.</p>
+  <input id="friendSearch" placeholder="Rechercher un nom">
+  <button class="orange full" onclick="searchFriends()">Rechercher</button>
 </section>
 
 <section id="messages" class="panel hidden">
-<h2>💬 MESSAGES</h2>
-<p>La messagerie privée doit encore être connectée à un service sécurisé.</p>
-<textarea id="draftMessage" placeholder="Préparer un message"></textarea>
-<button class="primary full" onclick="alert('La messagerie en ligne sera activée plus tard.')">Continuer</button>
+  <h2>MESSAGES</h2>
+  <p>La messagerie privée doit encore être connectée à un service sécurisé.</p>
+  <textarea id="draftMessage" placeholder="Préparer un message"></textarea>
+  <button class="primary full" onclick="alert('La messagerie en ligne sera activée après connexion du service sécurisé.')">Continuer</button>
 </section>
 
 <section id="profile" class="panel hidden">
-<h2>🌺 PROFIL</h2>
-<label for="displayName">Nom affiché</label>
-<input id="displayName" placeholder="Ton nom ou pseudonyme" maxlength="60">
-<button class="pink full" onclick="saveProfile()">Enregistrer le nom</button>
-<hr>
-<h3>Personnaliser l'apparence</h3>
-<label for="accentColor">Couleur des boutons</label>
-<input id="accentColor" type="color" value="#ed4dba">
-<button class="primary full" onclick="applyColor()">Appliquer la couleur</button>
-<hr>
-<h3>Installer JUNOVABOOK</h3>
-<p>Ouvre le menu du navigateur et cherche « Ajouter à l'écran d'accueil », si cette option est disponible.</p>
-<button class="blue full" onclick="alert('Ouvre le menu de ton navigateur et cherche Ajouter à l’écran d’accueil.')">Comment installer ?</button>
-<hr>
-<h3>Compte</h3>
-<button class="full" onclick="alert('La création de compte sécurisée sera connectée plus tard.')">Créer un compte</button>
-<button class="full" onclick="alert('La connexion sera activée après la mise en place de l’authentification.')">Se connecter</button>
+  <h2>PROFIL</h2>
+  <label for="displayName">Nom affiché</label>
+  <input id="displayName" maxlength="60" placeholder="Ton nom ou pseudonyme">
+  <button class="pink full" onclick="saveProfile()">Enregistrer le nom</button>
+  <hr>
+  <h3>PARAMÈTRES → APPARENCE</h3>
+  <label for="accentColor">Couleur personnelle des boutons LOVES</label>
+  <input id="accentColor" type="color" value="#ed4dba">
+  <button class="primary full" onclick="applyColor()">Appliquer ma couleur</button>
+  <p class="notice">La préférence est enregistrée sur cet appareil pour cette démonstration. La synchronisation par compte viendra avec le service en ligne.</p>
+  <hr>
+  <h3>Installer JUNOVABOOK</h3>
+  <p>Tu peux ajouter JUNOVABOOK à l'écran d'accueil depuis le menu de ton navigateur. L'installation reste facultative.</p>
+  <button class="blue full" onclick="installHelp()">👉 INSTALLER JUNOVABOOK</button>
+  <hr>
+  <h3>Compte</h3>
+  <p class="notice">Les comptes sécurisés par numéro, mot de passe et code de récupération ne sont pas encore activés. Ne saisis pas de vrai mot de passe dans cette démonstration.</p>
+  <button class="full" onclick="alert('La création de compte sera activée après la mise en place du service sécurisé.')">Créer un compte</button>
+  <button class="full" onclick="alert('La connexion sera activée après la mise en place du service sécurisé.')">Se connecter</button>
+  <hr>
+  <button class="danger full" onclick="clearLocalPosts()">Effacer les publications de cet appareil</button>
 </section>
 </main>
 
-<nav class="bottom">
-<button class="home" onclick="navigate('home')">🏠 ACCUEIL</button>
-<button class="friends" onclick="navigate('friends')">🧡 AMI</button>
-<button class="messages" onclick="navigate('messages')">💬 MESSAGE</button>
-<button class="profile" onclick="navigate('profile')">🌺 PROFIL</button>
+<nav class="bottom" aria-label="Navigation principale">
+  <button class="home" onclick="navigate('home')">ACCUEIL</button>
+  <button class="friends" onclick="navigate('friends')">AMI</button>
+  <button class="messages" onclick="navigate('messages')">MESSAGE</button>
+  <button class="profile" onclick="navigate('profile')">PROFIL</button>
 </nav>
-
 <footer>© 2026 JUNOVABOOK · Prototype en développement</footer>
 
 <script>
+const STORAGE_KEY='junovabook-posts-v2';
 let composerMode='publication';
-let novas=0;
 let nextId=1;
+let pendingMedia=null;
 
-const posts=[
-{id:nextId++,type:'publication',name:'JUNOVABOOK',text:'Bienvenue sur JUNOVABOOK ! Ici, chacun peut partager ses idées et échanger dans le respect.',likes:0,comments:[],votes:[0,0],options:[]},
-{id:nextId++,type:'debat',name:'JUNOVABOOK',text:'Faut-il apprendre une nouvelle compétence chaque année ?',likes:0,comments:[],votes:[0,0],options:['Pour','Contre']}
+const starterPosts=[
+{id:1,type:'publication',name:'JUNOVABOOK',text:'Bienvenue sur JUNOVABOOK ! Ici, chacun peut partager ses idées et échanger dans le respect.',media:null,likes:0,comments:[],votes:[0,0],options:[]},
+{id:2,type:'debat',name:'JUNOVABOOK',text:'Faut-il apprendre une nouvelle compétence chaque année ?',media:null,likes:0,comments:[],votes:[0,0],options:['POUR','CONTRE']}
 ];
 
+function loadPosts(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const saved=JSON.parse(raw);
+      if(Array.isArray(saved))return saved;
+    }
+  }catch(e){}
+  return starterPosts.map(p=>({...p,comments:[]}));
+}
+
+let posts=loadPosts();
+nextId=Math.max(0,...posts.map(p=>Number(p.id)||0))+1;
+
+function savePosts(){
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(posts));
+    return true;
+  }catch(e){
+    alert('Le stockage de cet appareil est plein ou indisponible. Essaie une photo/vidéo plus petite, ou retire le média.');
+    return false;
+  }
+}
+
 function escapeHTML(value){
-return String(value).replace(/[&<>"']/g,function(c){
-return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-});
+  return String(value).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
 }
 
 function showComposer(mode){
-composerMode=mode||'publication';
-document.getElementById('composer').classList.remove('hidden');
-document.getElementById('composerTitle').textContent=composerMode==='debat'?'Lancer un débat':'Créer une publication';
-document.getElementById('pollFields').classList.toggle('hidden',composerMode!=='debat');
-document.getElementById('postText').focus();
+  composerMode=mode||'publication';
+  pendingMedia=null;
+  document.getElementById('postMedia').value='';
+  document.getElementById('composer').classList.remove('hidden');
+  document.getElementById('composerTitle').textContent=composerMode==='debat'?'Lancer un débat':'Créer une publication';
+  document.getElementById('pollFields').classList.toggle('hidden',composerMode!=='debat');
+  document.getElementById('postText').focus();
 }
 
 function hideComposer(){
-document.getElementById('composer').classList.add('hidden');
+  document.getElementById('composer').classList.add('hidden');
+  pendingMedia=null;
 }
 
-function publish(){
-const text=document.getElementById('postText').value.trim();
-if(!text){alert('Écris un message avant de publier.');return;}
-
-let options=[];
-if(composerMode==='debat'){
-options=[
-document.getElementById('optionA').value.trim()||'Pour',
-document.getElementById('optionB').value.trim()||'Contre'
-];
-}
-
-posts.unshift({
-id:nextId++,
-type:composerMode,
-name:document.getElementById('displayName').value.trim()||'Membre',
-text:text,
-likes:0,
-comments:[],
-votes:[0,0],
-options:options
+document.getElementById('postMedia').addEventListener('change',function(){
+  const file=this.files&&this.files[0];
+  pendingMedia=null;
+  if(!file)return;
+  if(!file.type.startsWith('image/')&&!file.type.startsWith('video/')){
+    alert('Choisis une image ou une vidéo.');
+    this.value='';
+    return;
+  }
+  if(file.size>900*1024){
+    alert('Pour cette démonstration, choisis un média de moins de 900 Ko afin de limiter le stockage.');
+    this.value='';
+    return;
+  }
+  const reader=new FileReader();
+  reader.onload=function(){
+    pendingMedia={type:file.type.startsWith('video/')?'video':'image',src:reader.result,name:file.name};
+  };
+  reader.onerror=function(){
+    alert('Impossible de lire ce fichier. Essaie un autre média.');
+  };
+  reader.readAsDataURL(file);
 });
 
-document.getElementById('postText').value='';
-document.getElementById('optionA').value='';
-document.getElementById('optionB').value='';
-hideComposer();
-renderFeed();
-navigate('home');
+function publish(){
+  const text=document.getElementById('postText').value.trim();
+  if(!text&&!pendingMedia){
+    alert('Écris un message ou ajoute une photo/vidéo avant de publier.');
+    return;
+  }
+  let options=[];
+  if(composerMode==='debat'){
+    options=[
+      document.getElementById('optionA').value.trim()||'POUR',
+      document.getElementById('optionB').value.trim()||'CONTRE'
+    ];
+  }
+  const item={
+    id:nextId++,
+    type:composerMode,
+    name:document.getElementById('displayName').value.trim()||'Membre',
+    text:text,
+    media:pendingMedia,
+    likes:0,
+    comments:[],
+    votes:[0,0],
+    options:options
+  };
+  posts.unshift(item);
+  if(!savePosts()){
+    posts.shift();
+    nextId--;
+    return;
+  }
+  document.getElementById('postText').value='';
+  document.getElementById('optionA').value='';
+  document.getElementById('optionB').value='';
+  document.getElementById('postMedia').value='';
+  pendingMedia=null;
+  hideComposer();
+  renderFeed();
+  navigate('home');
 }
 
-function renderComments(comments,postId){
-return comments.map(function(c){
-return '<div class="comment"><strong>'+escapeHTML(c.name)+'</strong><p>'+escapeHTML(c.text)+'</p><button onclick="replyTo('+postId+','+c.id+')">Répondre</button>'+renderComments(c.replies,postId)+'</div>';
-}).join('');
+function renderReplies(replies,postId){
+  return (replies||[]).map(function(c){
+    return '<div class="reply"><strong>'+escapeHTML(c.name)+'</strong><p>'+escapeHTML(c.text)+'</p><button onclick="replyTo('+postId+','+c.id+')">Répondre dans le débat</button>'+renderReplies(c.replies,postId)+'</div>';
+  }).join('');
+}
+
+function mediaHTML(media){
+  if(!media||!media.src)return '';
+  if(media.type==='video'){
+    return '<video class="media-preview" controls preload="metadata" src="'+media.src+'">Ton navigateur ne peut pas lire cette vidéo.</video>';
+  }
+  return '<img class="media-preview" src="'+media.src+'" alt="Photo publiée">';
 }
 
 function renderFeed(){
-document.getElementById('feed').innerHTML=posts.map(function(p){
-let poll='';
-if(p.type==='debat'){
-poll='<div class="row"><button class="green" onclick="vote('+p.id+',0)">'+escapeHTML(p.options[0])+' ('+p.votes[0]+')</button><button class="pink" onclick="vote('+p.id+',1)">'+escapeHTML(p.options[1])+' ('+p.votes[1]+')</button></div>';
-}
-return '<article class="post"><span class="pill">'+(p.type==='debat'?'⚖️ DÉBAT':'✍️ PUBLICATION')+'</span><h3>'+escapeHTML(p.name)+'</h3><p>'+escapeHTML(p.text)+'</p>'+poll+'<div class="actions"><button class="pink" onclick="likePost('+p.id+')">♥ LIKER ('+p.likes+')</button><button class="green" onclick="commentPost('+p.id+')">💬 DÉBATTRE</button><button class="blue" onclick="sharePost('+p.id+')">↗ DIFFUSER</button></div><div class="stat">♥ '+p.likes+' réactions</div><div class="stat">💬 '+p.comments.length+' commentaires</div><div>'+renderComments(p.comments,p.id)+'</div></article>';
-}).join('');
+  const feed=document.getElementById('feed');
+  if(!posts.length){
+    feed.innerHTML='<div class="panel empty">Aucune publication pour le moment. Sois le premier à t’exprimer !</div>';
+    updateNovas();
+    return;
+  }
+  feed.innerHTML=posts.map(function(p){
+    let poll='';
+    if(p.type==='debat'){
+      const opts=p.options||['POUR','CONTRE'];
+      const votes=p.votes||[0,0];
+      poll='<div class="row"><button class="green" onclick="vote('+p.id+',0)">'+escapeHTML(opts[0]||'POUR')+' ('+(votes[0]||0)+')</button><button class="pink" onclick="vote('+p.id+',1)">'+escapeHTML(opts[1]||'CONTRE')+' ('+(votes[1]||0)+')</button></div>';
+    }
+    const replies=p.comments||[];
+    return '<article class="post"><span class="pill">'+(p.type==='debat'?'DÉBAT':'PUBLICATION')+'</span><h3>'+escapeHTML(p.name)+'</h3>'+(p.text?'<p>'+escapeHTML(p.text)+'</p>':'')+mediaHTML(p.media)+poll+
+    '<div class="actions"><button class="pink" onclick="likePost('+p.id+')">LOVES ('+(p.likes||0)+')</button><button class="green" onclick="commentPost('+p.id+')">DÉBATS</button><button class="blue" onclick="sharePost('+p.id+')">DIFFUSIONS</button></div>'+
+    '<div class="stat">'+(p.likes||0)+' LOVES</div><div class="stat">'+replies.length+' DÉBATS</div><div>'+renderReplies(replies,p.id)+'</div></article>';
+  }).join('');
+  updateNovas();
 }
 
-function findPost(id){
-return posts.find(function(p){return p.id===id;});
+function updateNovas(){
+  const total=posts.reduce((sum,p)=>sum+(Number(p.likes)||0),0);
+  document.getElementById('novasCount').textContent=total;
 }
+
+function findPost(id){return posts.find(p=>p.id===id);}
 
 function likePost(id){
-const p=findPost(id);
-if(p){p.likes++;renderFeed();}
+  const p=findPost(id);
+  if(p){
+    p.likes=(p.likes||0)+1;
+    if(savePosts())renderFeed();
+  }
 }
 
 function vote(id,index){
-const p=findPost(id);
-if(p){p.votes[index]++;renderFeed();}
+  const p=findPost(id);
+  if(p){
+    p.votes=p.votes||[0,0];
+    p.votes[index]=(p.votes[index]||0)+1;
+    if(savePosts())renderFeed();
+  }
 }
 
 function commentPost(id){
-const text=prompt('Écris ton commentaire :');
-if(!text||!text.trim())return;
-const p=findPost(id);
-if(!p)return;
-p.comments.push({id:nextId++,name:document.getElementById('displayName').value.trim()||'Membre',text:text.trim(),replies:[]});
-renderFeed();
+  const text=prompt('Écris ta contribution au débat :');
+  if(!text||!text.trim())return;
+  const p=findPost(id);
+  if(!p)return;
+  p.comments=p.comments||[];
+  p.comments.push({
+    id:nextId++,
+    name:document.getElementById('displayName').value.trim()||'Membre',
+    text:text.trim(),
+    replies:[]
+  });
+  if(savePosts())renderFeed();
 }
 
 function findComment(comments,id){
-for(const c of comments){
-if(c.id===id)return c;
-const found=findComment(c.replies,id);
-if(found)return found;
-}
-return null;
+  for(const c of comments||[]){
+    if(c.id===id)return c;
+    const found=findComment(c.replies,id);
+    if(found)return found;
+  }
+  return null;
 }
 
 function replyTo(postId,commentId){
-const p=findPost(postId);
-if(!p)return;
-const text=prompt('Écris ta réponse :');
-if(!text||!text.trim())return;
-const parent=findComment(p.comments,commentId);
-if(!parent)return;
-parent.replies.push({id:nextId++,name:document.getElementById('displayName').value.trim()||'Membre',text:text.trim(),replies:[]});
-renderFeed();
+  const p=findPost(postId);
+  if(!p)return;
+  const text=prompt('Écris ta réponse dans le débat :');
+  if(!text||!text.trim())return;
+  const parent=findComment(p.comments,commentId);
+  if(!parent)return;
+  parent.replies=parent.replies||[];
+  parent.replies.push({
+    id:nextId++,
+    name:document.getElementById('displayName').value.trim()||'Membre',
+    text:text.trim(),
+    replies:[]
+  });
+  if(savePosts())renderFeed();
 }
 
 function sharePost(id){
-const p=findPost(id);
-if(!p)return;
-const text=p.name+' sur JUNOVABOOK : '+p.text;
-if(navigator.share){
-navigator.share({title:'JUNOVABOOK',text:text}).catch(function(){});
-}else{
-alert(text);
-}
-}
-
-function toggleNovas(){
-novas++;
-document.getElementById('novasCount').textContent=novas;
+  const p=findPost(id);
+  if(!p)return;
+  const text=(p.name||'Membre')+' sur JUNOVABOOK : '+(p.text||'Découvre cette publication sur JUNOVABOOK');
+  if(navigator.share){
+    navigator.share({title:'JUNOVABOOK',text:text}).catch(function(){});
+  }else{
+    prompt('Copie ce texte pour le diffuser :',text);
+  }
 }
 
 function navigate(section){
-['home','friends','messages','profile'].forEach(function(id){
-document.getElementById(id).classList.toggle('hidden',id!==section);
-});
-window.scrollTo({top:0,behavior:'smooth'});
+  ['home','friends','messages','profile'].forEach(function(id){
+    document.getElementById(id).classList.toggle('hidden',id!==section);
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function saveProfile(){
-const name=document.getElementById('displayName').value.trim();
-if(!name){alert('Écris d’abord le nom à afficher.');return;}
-alert('Nom choisi pour cette démonstration : '+name);
+  const name=document.getElementById('displayName').value.trim();
+  if(!name){
+    alert('Écris d’abord le nom à afficher.');
+    return;
+  }
+  try{localStorage.setItem('junovabook-name',name);}catch(e){}
+  alert('Nom enregistré sur cet appareil pour cette démonstration.');
 }
 
 function applyColor(){
-const color=document.getElementById('accentColor').value;
-document.querySelectorAll('.pink').forEach(function(button){
-button.style.background=color;
-});
+  const color=document.getElementById('accentColor').value;
+  document.documentElement.style.setProperty('--accent',color);
+  try{localStorage.setItem('junovabook-accent',color);}catch(e){}
+}
+
+function installHelp(){
+  alert('Pour installer JUNOVABOOK : ouvre le menu de Firefox ou de ton navigateur, puis cherche « Ajouter à l’écran d’accueil ». L’installation est facultative.');
 }
 
 function searchFriends(){
-const query=document.getElementById('friendSearch').value.trim();
-if(!query){alert('Écris un nom à rechercher.');return;}
-alert('La recherche en ligne des membres n’est pas encore activée.');
+  const query=document.getElementById('friendSearch').value.trim();
+  if(!query){
+    alert('Écris un nom à rechercher.');
+    return;
+  }
+  alert('La recherche en ligne des membres n’est pas encore activée.');
 }
+
+function clearLocalPosts(){
+  if(!confirm('Effacer toutes les publications enregistrées sur cet appareil ? Cette action ne peut pas être annulée.'))return;
+  posts=[];
+  savePosts();
+  renderFeed();
+}
+
+try{
+  const savedColor=localStorage.getItem('junovabook-accent');
+  const savedName=localStorage.getItem('junovabook-name');
+  if(savedColor){
+    document.documentElement.style.setProperty('--accent',savedColor);
+    document.getElementById('accentColor').value=savedColor;
+  }
+  if(savedName)document.getElementById('displayName').value=savedName;
+}catch(e){}
 
 renderFeed();
 </script>
 </body>
-  </html>
+</html>
