@@ -646,16 +646,36 @@ function renderFeed(){
     renderComments(p);
   });
 }
+
 function lovePost(id){
   const p=posts.find(x=>String(x.id)===String(id));
   if(!p)return;
-  p.loves=(Number(p.loves)||0)+1;
-  novas+=1;
+
+  if(!p.lovedBy) p.lovedBy=[];
+
+  const userId='local-user';
+  const alreadyLoved=p.lovedBy.includes(userId);
+
+  if(alreadyLoved){
+    p.lovedBy=p.lovedBy.filter(x=>x!==userId);
+    p.loves=Math.max(0,(Number(p.loves)||0)-1);
+    novas=Math.max(0,novas-1);
+  }else{
+    p.lovedBy.push(userId);
+    p.loves=(Number(p.loves)||0)+1;
+    novas+=1;
+  }
+
   updateBalances();
   persistPosts();
   renderFeed();
-  addActivity('Tu as envoyé un LOVE à une publication');
+
+  addActivity(alreadyLoved
+    ? 'Tu as retiré ton LOVE à une publication'
+    : 'Tu as envoyé un LOVE à une publication'
+  );
 }
+
 function toggleDebate(id){
   const panel=document.getElementById('debate-'+id);
   if(panel)panel.classList.toggle('hidden');
