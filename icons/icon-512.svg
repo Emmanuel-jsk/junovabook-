@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#172554"/>
+      <stop offset="1" stop-color="#100d20"/>
+    </linearGradient>
+    <linearGradient id="book" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#a855f7"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="36" fill="url(#bg)"/>
+  <circle cx="96" cy="67" r="29" fill="#2563eb" stroke="#22d3ee" stroke-width="3"/>
+  <path d="M70 64 Q82 52 96 66 Q110 52 122 64 M96 39 V95 M78 79 Q96 91 114 79" fill="none" stroke="#dbeafe" stroke-width="3" stroke-linecap="round"/>
+  <path d="M96 107 C84 88 60 95 66 113 C70 126 88 135 96 143 C104 135 122 126 126 113 C132 95 108 88 96 107Z" fill="#f472b6"/>
+  <path d="M35 119 Q65 110 96 139 Q127 110 157 119 L157 153 Q125 146 96 165 Q67 146 35 153Z" fill="url(#book)" stroke="#22d3ee" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M96 139 V163" stroke="#fff" stroke-width="3"/>
+  <text x="96" y="181" font-family="Arial,sans-serif" font-size="15" font-weight="bold" text-anchor="middle" fill="#fff">JUNOVA</text>
+</svg>
