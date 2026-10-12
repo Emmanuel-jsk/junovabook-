@@ -646,7 +646,6 @@ function renderFeed(){
     renderComments(p);
   });
 }
-
 function lovePost(id){
   const p=posts.find(x=>String(x.id)===String(id));
   if(!p)return;
@@ -673,8 +672,9 @@ function lovePost(id){
   addActivity(alreadyLoved
     ? 'Tu as retiré ton LOVE à une publication'
     : 'Tu as envoyé un LOVE à une publication'
-  );
-}
+  ) ;
+  }
+
 
 function toggleDebate(id){
   const panel=document.getElementById('debate-'+id);
