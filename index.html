@@ -568,26 +568,32 @@ document.getElementById('voiceFile').addEventListener('change', function(){
     return;
   }
 
-  voiceBlob=file;
+  voiceBlob = file;
   showVoicePreview(file);
-  document.getElementById('publishVoiceBtn').disabled=false;
+  document.getElementById('publishVoiceBtn').disabled = false;
 });
+
 async function publishVoice(){
-  if(megas<5){
+  if(megas < 5){
     alert('Il te faut 5 MÉGAS. Réclame d’abord les MÉGAS gratuits dans ton profil.');
     return;
   }
-  const file=document.getElementById('voiceFile').files[0];
-  const blob=file||voiceBlob;
+
+  const file = document.getElementById('voiceFile').files[0];
+  const blob = file || voiceBlob;
+
   if(!blob){
     alert('Enregistre ta voix ou choisis un fichier audio.');
     return;
   }
-  if(blob.size>900*1024){
-    alert('L’audio dépasse 900 Ko.');
+
+  if(file && file.size > 2.5 * 1024 * 1024){
+    alert('Le fichier audio dépasse 2,5 Mo.');
     return;
   }
-  try{
+
+  // Garde ici la suite existante de ta fonction publishVoice().
+
     const data=await fileToDataURL(blob);
     const post={
       id:safeId(),name:profileName(),
@@ -611,7 +617,7 @@ async function publishVoice(){
 }
 function mediaHTML(media){
   return (media||[]).map(m=>{
-    if(m.type==='audio')return '<div class="audio-box"><audio controls preload="none" src="'+m.data+'"></audio></div>';
+    if(m.type==='audio')return '<div class="audio-box"><audio controls preload="none" src="'+m.data+"></audio></div>';
     if(m.type==='video')return '<video class="media-preview" controls preload="none" src="'+m.data+'"></video>';
     return '<img class="media-preview" loading="lazy" alt="Photo publiée" src="'+m.data+'">';
   }).join('');
