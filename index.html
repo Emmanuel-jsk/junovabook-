@@ -767,17 +767,37 @@ function renderFeed(){
   });
 }
 
-function lovePost(id){
-  const post=posts.find(p=>String(p.id)===String(id));
-  if(!post)return;
 
-  post.loves=(Number(post.loves)||0)+1;
-  if(!persistPosts()){
-    post.loves--;
+function lovePost(id){
+  const post = posts.find(p => String(p.id) === String(id));
+  if (!post) return;
+
+  if (!Array.isArray(post.lovedBy)) {
+    post.lovedBy = [];
+  }
+
+  const me = 'junova_local_user';
+  const alreadyLoved = post.lovedBy.includes(me);
+
+  if (alreadyLoved) {
+    post.lovedBy = post.lovedBy.filter(user => user !== me);
+    post.loves = Math.max(0, (Number(post.loves) || 0) - 1);
+  } else {
+    post.lovedBy.push(me);
+    post.loves = (Number(post.loves) || 0) + 1;
+  }
+
+  if (!persistPosts()) {
+    if (alreadyLoved) {
+      post.lovedBy.push(me);
+      post.loves++;
+    } else {
+      post.lovedBy = post.lovedBy.filter(user => user !== me);
+      post.loves = Math.max(0, post.loves - 1);
+    }
     return;
   }
 
-  addActivity('Un LOVE a été ajouté à une publication.');
   renderFeed();
 }
 
