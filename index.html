@@ -122,7 +122,7 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
     <textarea id="postText" maxlength="5000" placeholder="Exprime tes idées ici..."></textarea>
     <label for="postMedia">Ajouter jusqu'à 4 photos ou une vidéo</label>
     <input id="postMedia" type="file" accept="image/*,video/*" multiple>
-    <p class="file-note">Pour éviter de saturer le stockage, chaque fichier doit rester sous 900 Ko. Choisis une vidéo ou quatre photos maximum.</p>
+    <p class="file-note">Choisis une vidéo ou jusqu’à quatre photos. Les limites audio sont différentes : 0,5 Mo pour un enregistrement au micro et 2,5 Mo pour un fichier audio importé.</p>
     <div id="mediaPendingPreview" class="preview-grid"></div>
     <div id="pollFields" class="hidden">
       <label for="optionA">Premier choix</label><input id="optionA" maxlength="100" placeholder="POUR">
@@ -135,7 +135,7 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
   </section>
 
   <section id="voiceComposer" class="panel hidden">
-    <h2>🎙️ MA VOIX JUNOVA</h2>
+    <h2>🎙️ MA VOIX<br>JUNOVA</h2>
     <p>Choisis un fichier audio ou enregistre ta voix. Publication : 5 MÉGAS de démonstration.</p>
     <label for="voiceText">Texte facultatif</label>
     <textarea id="voiceText" maxlength="1500" placeholder="Accompagne ta voix d'un texte..."></textarea>
@@ -247,7 +247,7 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
 <nav class="bottom" aria-label="Navigation principale">
   <button class="home" onclick="navigate('home')">ACCUEIL</button>
   <button class="friends" onclick="navigate('friends')">AMI</button>
-<button class="create" onclick="navigate('junovas')">JUNOVAS</button>
+  <button class="create" onclick="navigate('junovas')">JUNOVAS</button>
   <button class="messages" onclick="navigate('messages')">MESSAGE</button>
   <button class="profile" onclick="navigate('profile')">PROFIL</button>
 </nav>
@@ -261,9 +261,7 @@ const SAVED_STORE='junovabook_saved';
 const PROFILE_STORE='junovabook_profile';
 const ACTIVITY_STORE='junovabook_activities';
 const MEGAS_STORE='junovabook_megas';
-const NOVAS_STORE='junovabook_novas';
-
-let posts=[];
+const NOVAS_STORE='junovabook_novas';let posts=[];
 let saved=new Set();
 let activities=[];
 let megas=20;
@@ -289,14 +287,23 @@ function readJSON(key,fallback){
   }catch(e){return fallback}
 }
 function saveJSON(key,value){
-  try{localStorage.setItem(key,JSON.stringify(value));return true}
-  catch(e){alert('Le stockage de cet appareil est plein. Supprime des anciennes publications ou des médias.');return false}
+  try{
+    localStorage.setItem(key,JSON.stringify(value));
+    return true;
+  }catch(e){
+    alert('Le stockage de cet appareil est plein. Supprime des anciennes publications ou des médias.');
+    return false;
+  }
 }
 function esc(value){
   return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-function safeId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
-function profileName(){return (localStorage.getItem(PROFILE_STORE)||'Membre JUNOVABOOK').trim()||'Membre JUNOVABOOK'}
+function safeId(){
+  return Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+}
+function profileName(){
+  return (localStorage.getItem(PROFILE_STORE)||'Membre JUNOVABOOK').trim()||'Membre JUNOVABOOK';
+}
 
 function init(){
   posts=readJSON(STORE,[]);
@@ -323,7 +330,9 @@ function init(){
   renderFeed();
   registerServiceWorker();
 }
-function persistPosts(){return saveJSON(STORE,posts)}
+function persistPosts(){
+  return saveJSON(STORE,posts);
+}
 function updateBalances(){
   document.getElementById('megasCount').textContent=megas;
   document.getElementById('profileMegas').textContent=megas;
@@ -392,7 +401,9 @@ function showComposer(mode){
   document.getElementById('composer').classList.remove('hidden');
   document.getElementById('postText').focus();
 }
-function hideComposer(){document.getElementById('composer').classList.add('hidden')}
+function hideComposer(){
+  document.getElementById('composer').classList.add('hidden');
+}
 function fileToDataURL(file){
   return new Promise((resolve,reject)=>{
     const reader=new FileReader();
@@ -401,10 +412,12 @@ function fileToDataURL(file){
     reader.readAsDataURL(file);
   });
 }
+
 document.getElementById('postMedia').addEventListener('change',async function(){
   const files=[...this.files];
   const preview=document.getElementById('mediaPendingPreview');
   preview.innerHTML='';
+
   if(files.length>4){
     alert('Choisis au maximum quatre fichiers.');
     this.value='';
@@ -415,45 +428,39 @@ document.getElementById('postMedia').addEventListener('change',async function(){
     this.value='';
     return;
   }
- for(const file of files){
-  if(file.size > 2.5 * 1024 * 1024){
-    alert('Le fichier dépasse 2,5 Mo.');
-    return;
-  }
 
-  if(file.type.startsWith('image/')){
-    const img = document.createElement('img');
-    img.alt = 'Aperçu de la photo';
-    img.src = URL.createObjectURL(file);
-    preview.appendChild(img);
+  for(const file of files){
+    if(file.type.startsWith('image/')){
+      const img=document.createElement('img');
+      img.alt='Aperçu de la photo';
+      img.src=URL.createObjectURL(file);
+      preview.appendChild(img);
+    }
   }
-}
 });
 
 async function publish(){
-  const text = document.getElementById('postText').value.trim();
-  const files = [...document.getElementById('postMedia').files];
+  const text=document.getElementById('postText').value.trim();
+  const files=[...document.getElementById('postMedia').files];
 
-  if(!text && !files.length){
+  if(!text&&!files.length){
     alert('Écris un message ou ajoute un média.');
     return;
   }
-
-  if(composerMode === 'debat' &&
-    (!document.getElementById('optionA').value.trim() ||
+  if(composerMode==='debat'&&
+    (!document.getElementById('optionA').value.trim()||
      !document.getElementById('optionB').value.trim())){
     alert('Ajoute les deux choix du débat.');
     return;
   }
 
-  const media = [];
-
+  const media=[];
   try{
     for(const file of files){
-      if(file.size > 2.5 * 1024 * 1024){
+      if(file.size>2.5*1024*1024){
         alert('Le fichier dépasse 2,5 Mo.');
         return;
-  }
+      }
       media.push({
         type:file.type.startsWith('video/')?'video':'image',
         data:await fileToDataURL(file),
@@ -464,12 +471,16 @@ async function publish(){
     alert('Impossible de lire ce média.');
     return;
   }
+
   const post={
     id:safeId(),name:profileName(),text,media,
     date:new Date().toISOString(),loves:0,comments:[],
     type:composerMode,
     poll:composerMode==='debat'?{
-      options:[document.getElementById('optionA').value.trim(),document.getElementById('optionB').value.trim()],
+      options:[
+        document.getElementById('optionA').value.trim(),
+        document.getElementById('optionB').value.trim()
+      ],
       votes:[0,0],voted:false
     }:null
   };
@@ -482,6 +493,7 @@ async function publish(){
   hideComposer();
   renderFeed();
 }
+
 function openVoiceComposer(){
   navigate('home');
   document.getElementById('composer').classList.add('hidden');
@@ -493,6 +505,7 @@ function cancelVoiceComposer(){
   document.getElementById('voiceFile').value='';
   document.getElementById('voiceText').value='';
   document.getElementById('voicePreview').classList.add('hidden');
+  document.getElementById('publishVoiceBtn').disabled=true;
   document.getElementById('voiceComposer').classList.add('hidden');
 }
 function formatTime(seconds){
@@ -503,6 +516,7 @@ function startTimer(elementId,start){
   const el=document.getElementById(elementId);
   return setInterval(()=>{el.textContent=formatTime((Date.now()-start)/1000)},500);
 }
+
 async function toggleVoiceRecording(){
   if(recorder&&recorder.state==='recording'){
     stopVoiceRecording();
@@ -516,7 +530,9 @@ async function toggleVoiceRecording(){
     recordingStream=await navigator.mediaDevices.getUserMedia({audio:true});
     recordingChunks=[];
     recorder=new MediaRecorder(recordingStream);
-    recorder.ondataavailable=e=>{if(e.data.size)recordingChunks.push(e.data)};
+    recorder.ondataavailable=e=>{
+      if(e.data.size)recordingChunks.push(e.data);
+    };
     recorder.onstop=()=>{
       voiceBlob=new Blob(recordingChunks,{type:recorder.mimeType||'audio/webm'});
       recordingStream?.getTracks().forEach(t=>t.stop());
@@ -524,6 +540,15 @@ async function toggleVoiceRecording(){
       clearInterval(voiceTimerInterval);
       document.getElementById('voiceRecordingStatus').classList.add('hidden');
       document.getElementById('voiceWave').classList.remove('active');
+
+      if(voiceBlob.size>0.5*1024*1024){
+        voiceBlob=null;
+        document.getElementById('publishVoiceBtn').disabled=true;
+        document.getElementById('voicePreview').classList.add('hidden');
+        alert('L’enregistrement vocal dépasse 0,5 Mo. Enregistre un message plus court.');
+        document.getElementById('recordVoiceBtn').textContent='🔴 Réenregistrer';
+        return;
+      }
       showVoicePreview(voiceBlob);
       document.getElementById('publishVoiceBtn').disabled=false;
       document.getElementById('recordVoiceBtn').textContent='🔴 Réenregistrer';
@@ -558,48 +583,48 @@ function showVoicePreview(blob){
   box.classList.remove('hidden');
 }
 
-document.getElementById('voiceFile').addEventListener('change', function(){
-  const file = this.files[0];
-  if(!file) return;
-
-  if(file.size > 2.5 * 1024 * 1024){
+document.getElementById('voiceFile').addEventListener('change',function(){
+  const file=this.files[0];
+  if(!file)return;
+  if(file.size>2.5*1024*1024){
     alert('Le fichier audio dépasse 2,5 Mo.');
-    this.value = '';
+    this.value='';
+    voiceBlob=null;
+    document.getElementById('publishVoiceBtn').disabled=true;
     return;
   }
-
-  voiceBlob = file;
+  voiceBlob=file;
   showVoicePreview(file);
-  document.getElementById('publishVoiceBtn').disabled = false;
+  document.getElementById('publishVoiceBtn').disabled=false;
 });
 
 async function publishVoice(){
-  if(megas < 5){
+  if(megas<5){
     alert('Il te faut 5 MÉGAS. Réclame d’abord les MÉGAS gratuits dans ton profil.');
     return;
   }
-
-  const file = document.getElementById('voiceFile').files[0];
-  const blob = file || voiceBlob;
-
+  const file=document.getElementById('voiceFile').files[0];
+  const blob=file||voiceBlob;
   if(!blob){
     alert('Enregistre ta voix ou choisis un fichier audio.');
     return;
   }
-
-  if(file && file.size > 2.5 * 1024 * 1024){
-    alert('Le fichier audio dépasse 2,5 Mo.');
-    return;
-  }
-
-  // Garde ici la suite existante de ta fonction publishVoice().
-
+  try{
+    if(file&&file.size>2.5*1024*1024){
+      alert('Le fichier audio dépasse 2,5 Mo.');
+      return;
+    }
+    if(!file&&blob.size>0.5*1024*1024){
+      alert('L’enregistrement vocal dépasse 0,5 Mo.');
+      return;
+    }
     const data=await fileToDataURL(blob);
     const post={
       id:safeId(),name:profileName(),
       text:document.getElementById('voiceText').value.trim(),
       media:[{type:'audio',data}],
-      date:new Date().toISOString(),loves:0,comments:[],type:'voice',poll:null
+      date:new Date().toISOString(),loves:0,comments:[],
+      type:'voice',poll:null
     };
     posts.unshift(post);
     if(!persistPosts()){
@@ -614,439 +639,787 @@ async function publishVoice(){
   }catch(e){
     alert('Impossible de sauvegarder cet audio.');
   }
+  }function mediaHTML(media){
+  if(!media)return '';
+  if(media.type==='audio'){
+    return `<audio controls preload="metadata" src="${esc(media.data)}"></audio>`;
+  }
+  if(media.type==='video'){
+    return `<video class="media-preview" controls preload="metadata" src="${esc(media.data)}"></video>`;
+  }
+  return `<img class="media-preview" src="${esc(media.data)}" alt="Média de la publication">`;
 }
-function mediaHTML(media){
-  return (media||[]).map(m=>{
-    if(m.type==='audio')return '<div class="audio-box"><audio controls preload="none" src="'+m.data+"></audio></div>';
-    if(m.type==='video')return '<video class="media-preview" controls preload="none" src="'+m.data+'"></video>';
-    return '<img class="media-preview" loading="lazy" alt="Photo publiée" src="'+m.data+'">';
-  }).join('');
+
+function renderMedia(media){
+  if(!Array.isArray(media)||!media.length)return '';
+  if(media.length>1){
+    return `<div class="preview-grid">${media.map(m=>mediaHTML(m)).join('')}</div>`;
+  }
+  return media.map(m=>mediaHTML(m)).join('');
 }
+
+function findCommentById(comments,id){
+  for(const comment of comments||[]){
+    if(String(comment.id)===String(id))return comment;
+    const found=findCommentById(comment.children,id);
+    if(found)return found;
+  }
+  return null;
+}
+
+function commentNode(post,comment,depth=0){
+  const children=Array.isArray(comment.children)?comment.children:[];
+  const media=Array.isArray(comment.media)?comment.media:[];
+  const safeDepth=Math.min(depth,5);
+
+  return `
+    <div class="reply" id="comment-${esc(comment.id)}">
+      <strong>${esc(comment.name||'Membre JUNOVABOOK')}</strong>
+      <small> · ${esc(comment.date||'')}</small>
+      ${comment.text?`<p>${esc(comment.text)}</p>`:''}
+      ${media.map(m=>mediaHTML(m)).join('')}
+      <div class="row">
+        <button type="button" onclick="replyToComment('${esc(post.id)}','${esc(comment.id)}')">↩ Répondre</button>
+        <button type="button" class="blue" onclick="startAudioReply('${esc(post.id)}','${esc(comment.id)}')">🎙️ Réponse audio</button>
+      </div>
+      <div id="audio-reply-status-${esc(comment.id)}"></div>
+      ${children.length?`<div class="reply-children">${children.map(c=>commentNode(post,c,depth+1)).join('')}</div>`:''}
+    </div>`;
+}
+
 function renderFeed(){
   const feed=document.getElementById('feed');
+  if(!feed)return;
+
   feed.innerHTML='';
+
   if(!posts.length){
-    feed.innerHTML='<p class="empty">Aucune publication.</p>';
+    feed.innerHTML='<div class="panel empty">Aucune publication pour le moment.</div>';
     return;
   }
-  posts.forEach(p=>{
-    if(!Array.isArray(p.comments))p.comments=[];
+
+  posts.forEach(post=>{
+    if(!Array.isArray(post.comments))post.comments=[];
+    const comments=post.comments;
+    const isSaved=saved.has(String(post.id));
+    const poll=post.poll;
+
     const card=document.createElement('article');
     card.className='post';
-    card.id='post-'+p.id;
-    const date=new Date(p.date).toLocaleString();
-    card.innerHTML=
-      '<strong>'+esc(p.name)+'</strong><br><small>'+esc(date)+'</small>'+
-      (p.type==='debat'?'<span class="pill">DÉBAT</span>':'')+
-      '<p>'+esc(p.text||'Publication média')+'</p>'+
-      mediaHTML(p.media)+
-      (p.poll?'<div class="tier"><strong>Question du débat</strong><div id="poll-'+p.id+'"></div></div>':'')+
-      '<div class="actions">'+
-      '<button class="pink" onclick="lovePost(\''+p.id+'\')">❤️ LOVES <span>'+Number(p.loves||0)+'</span></button>'+
-      '<button class="blue" onclick="toggleDebate(\''+p.id+'\')">💬 DÉBATS <span>'+p.comments.length+'</span></button>'+
-      '<button class="green" onclick="sharePost(\''+p.id+'\')">↗ DIFFUSIONS</button>'+
-      '</div>'+
-      '<div class="row"><button onclick="toggleSaved(\''+p.id+'\')">'+(saved.has(String(p.id))?'★ Retirer des favoris':'☆ Ajouter aux favoris')+'</button>'+
-      '<button onclick="editPost(\''+p.id+'\')">Modifier</button>'+
-      '<button class="danger" onclick="deletePost(\''+p.id+'\')">Supprimer</button></div>'+
-      '<div class="debate-panel hidden" id="debate-'+p.id+'">'+
-      '<h3>Débats et commentaires</h3>'+
-      '<label for="comment-'+p.id+'">Ton commentaire</label>'+
-      '<textarea id="comment-'+p.id+'" maxlength="1500" placeholder="Exprime ton opinion..."></textarea>'+
-      '<button class="primary" onclick="commentPost(\''+p.id+'\')">Publier le commentaire</button>'+
-      '<button onclick="openAudioComment(\''+p.id+'\')">🎙️ Commentaire audio</button>'+
-      '<div class="comment-list" id="comments-'+p.id+'"></div></div>';
+
+    card.innerHTML=`
+      <div class="row" style="align-items:center;justify-content:space-between">
+        <strong>${esc(post.name||'Membre JUNOVABOOK')}</strong>
+        <small>${esc(post.date?new Date(post.date).toLocaleString():'')}</small>
+      </div>
+
+      ${post.type==='debat'?'<span class="pill">🗣️ DÉBAT</span>':''}
+      ${post.type==='voice'?'<span class="pill">🎙️ MA VOIX JUNOVA</span>':''}
+
+      ${post.text?`<p>${esc(post.text)}</p>`:''}
+      ${renderMedia(post.media)}
+
+      ${poll?`
+        <div class="debate-panel">
+          <h3>🗳️ Donne ton avis</h3>
+          ${(poll.options||[]).map((option,i)=>`
+            <button type="button" class="full ${i===0?'blue':'orange'}"
+              onclick="votePoll('${esc(post.id)}',${i})"
+              ${poll.voted?'disabled':''}>
+              ${esc(option)} · ${Number((poll.votes||[])[i]||0)} vote(s)
+            </button>`).join('')}
+          ${poll.voted?'<p class="notice">Ton vote a été enregistré sur cet appareil.</p>':''}
+        </div>`:''}
+
+      <div class="actions">
+        <button type="button" style="background:var(--accent)"
+          onclick="lovePost('${esc(post.id)}')">❤️ ${Number(post.loves)||0} LOVES</button>
+        <button type="button" style="background:#245fbd"
+          onclick="toggleComments('${esc(post.id)}')">💬 DÉBATTRE (${comments.length})</button>
+        <button type="button" style="background:#16815f"
+          onclick="sharePost('${esc(post.id)}')">↗ DIFFUSER</button>
+      </div>
+
+      <div class="row">
+        <button type="button" onclick="toggleSaved('${esc(post.id)}')">
+          ${isSaved?'★ Retirer des favoris':'☆ Ajouter aux favoris'}
+        </button>
+        <button type="button" onclick="editPost('${esc(post.id)}')">✏️ Modifier</button>
+        <button type="button" class="danger" onclick="deletePost('${esc(post.id)}')">Supprimer</button>
+      </div>
+
+      <div id="debate-${esc(post.id)}" class="debate-panel hidden">
+        <h3>💬 Discussion</h3>
+        <label for="comment-text-${esc(post.id)}">Ton commentaire</label>
+        <textarea id="comment-text-${esc(post.id)}" maxlength="2000"
+          placeholder="Écris ton commentaire..."></textarea>
+        <div class="row">
+          <button type="button" class="blue" onclick="addComment('${esc(post.id)}')">Envoyer</button>
+          <button type="button" class="primary" onclick="openAudioComment('${esc(post.id)}')">🎙️ Commentaire audio</button>
+        </div>
+        <div id="audio-comment-status-${esc(post.id)}"></div>
+        <div class="comment-list">
+          ${comments.length?comments.map(c=>commentNode(post,c)).join(''):'<p class="empty">Aucun commentaire. Lance la discussion !</p>'}
+        </div>
+      </div>`;
+
     feed.appendChild(card);
-    if(p.poll)renderPoll(p);
-    renderComments(p);
   });
 }
+
 function lovePost(id){
-  const p=posts.find(x=>String(x.id)===String(id));
-  if(!p)return;
+  const post=posts.find(p=>String(p.id)===String(id));
+  if(!post)return;
 
-  if(!p.lovedBy) p.lovedBy=[];
-
-  const userId='local-user';
-  const alreadyLoved=p.lovedBy.includes(userId);
-
-  if(alreadyLoved){
-    p.lovedBy=p.lovedBy.filter(x=>x!==userId);
-    p.loves=Math.max(0,(Number(p.loves)||0)-1);
-    novas=Math.max(0,novas-1);
-  }else{
-    p.lovedBy.push(userId);
-    p.loves=(Number(p.loves)||0)+1;
-    novas+=1;
+  post.loves=(Number(post.loves)||0)+1;
+  if(!persistPosts()){
+    post.loves--;
+    return;
   }
 
-  updateBalances();
-  persistPosts();
+  addActivity('Un LOVE a été ajouté à une publication.');
   renderFeed();
+}
 
-  addActivity(alreadyLoved
-    ? 'Tu as retiré ton LOVE à une publication'
-    : 'Tu as envoyé un LOVE à une publication'
-  ) ;
-  }
-
-
-function toggleDebate(id){
+function toggleComments(id){
   const panel=document.getElementById('debate-'+id);
-  if(panel)panel.classList.toggle('hidden');
+  if(!panel)return;
+  panel.classList.toggle('hidden');
 }
-function renderPoll(p){
-  const el=document.getElementById('poll-'+p.id);
-  if(!el)return;
-  el.innerHTML='';
-  p.poll.options.forEach((option,i)=>{
-    const btn=document.createElement('button');
-    btn.className='full blue';
-    btn.textContent=option+' — '+(p.poll.votes[i]||0)+' vote(s)';
-    btn.onclick=()=>{
-      if(p.poll.voted){
-        alert('Tu as déjà voté sur cet appareil pour ce débat.');
-        return;
-      }
-      p.poll.votes[i]=(p.poll.votes[i]||0)+1;
-      p.poll.voted=true;
-      persistPosts();
-      renderFeed();
-    };
-    el.appendChild(btn);
-  });
-}
-function commentPost(id){
-  const p=posts.find(x=>String(x.id)===String(id));
-  if(!p)return;
-  const input=document.getElementById('comment-'+id);
+
+function addComment(id){
+  const post=posts.find(p=>String(p.id)===String(id));
+  const input=document.getElementById('comment-text-'+id);
+  if(!post||!input)return;
+
   const text=input.value.trim();
   if(!text){
-    alert('Écris ton commentaire.');
+    alert('Écris un commentaire avant de l’envoyer.');
     return;
   }
-  p.comments.push({id:safeId(),name:profileName(),text,children:[],date:new Date().toISOString()});
-  if(!persistPosts())return;
-  addActivity('Commentaire publié');
-  renderFeed();
-  document.getElementById('debate-'+id)?.classList.remove('hidden');
-}
-function renderComments(p){
-  const el=document.getElementById('comments-'+p.id);
-  if(!el)return;
-  el.innerHTML='';
-  if(!p.comments.length){
-    el.innerHTML='<p class="empty">Pas encore de commentaires.</p>';
-    return;
-  }
-  p.comments.forEach(c=>el.appendChild(commentNode(p,c,0)));
-}
-function commentNode(p,c,depth){
-  const div=document.createElement('div');
-  div.className='reply';
-  const strong=document.createElement('strong');
-  strong.textContent=c.name||'Membre';
-  const text=document.createElement('p');
-  text.textContent=c.text||'';
-  div.append(strong,text);
-  (c.media||[]).forEach(m=>{
-    if(m.type==='audio'){
-      const audio=document.createElement('audio');
-      audio.controls=true;
-      audio.src=m.data;
-      audio.style.width='100%';
-      div.appendChild(audio);
-    }
+
+  post.comments=post.comments||[];
+  post.comments.push({
+    id:safeId(),
+    name:profileName(),
+    text,
+    media:[],
+    children:[],
+    date:new Date().toLocaleString()
   });
-  const reply=document.createElement('button');
-  reply.textContent='Répondre';
-  reply.onclick=()=>{
-    const answer=prompt('Ta réponse :');
-    if(!answer||!answer.trim())return;
-    c.children=c.children||[];
-    c.children.push({id:safeId(),name:profileName(),text:answer.trim(),children:[],date:new Date().toISOString()});
-    persistPosts();
-    renderFeed();
-    document.getElementById('debate-'+p.id)?.classList.remove('hidden');
-  };
-  div.appendChild(reply);
-  if(c.children&&c.children.length){
-    const kids=document.createElement('div');
-    kids.className='reply-children';
-    c.children.forEach(child=>kids.appendChild(commentNode(p,child,depth+1)));
-    div.appendChild(kids);
+
+  if(!persistPosts()){
+    post.comments.pop();
+    return;
   }
-  return div;
-}
-function editPost(id){
-  const p=posts.find(x=>String(x.id)===String(id));
-  if(!p)return;
-  if(p.name!==profileName()&&!confirm('Cette démonstration ne possède pas de comptes vérifiés. Modifier cette publication locale ?'))return;
-  const text=prompt('Modifier le texte de la publication :',p.text||'');
-  if(text===null)return;
-  p.text=text.trim();
-  persistPosts();
+
+  input.value='';
+  addActivity('Un nouveau commentaire a été publié.');
   renderFeed();
-  addActivity('Publication modifiée');
+
+  const panel=document.getElementById('debate-'+id);
+  if(panel)panel.classList.remove('hidden');
 }
-function deletePost(id){
-  const p=posts.find(x=>String(x.id)===String(id));
-  if(!p)return;
-  if(!confirm('Supprimer cette publication de cet appareil ?'))return;
-  posts=posts.filter(x=>String(x.id)!==String(id));
-  saved.delete(String(id));
-  persistPosts();
-  saveJSON(SAVED_STORE,[...saved]);
+
+function replyToComment(postId,commentId){
+  const post=posts.find(p=>String(p.id)===String(postId));
+  if(!post)return;
+
+  const comment=findCommentById(post.comments,commentId);
+  if(!comment)return;
+
+  const text=prompt('Écris ta réponse à ce commentaire :');
+  if(text===null||!text.trim())return;
+
+  if(!Array.isArray(comment.children))comment.children=[];
+  comment.children.push({
+    id:safeId(),
+    name:profileName(),
+    text:text.trim(),
+    media:[],
+    children:[],
+    date:new Date().toLocaleString()
+  });
+
+  if(!persistPosts()){
+    comment.children.pop();
+    return;
+  }
+
+  addActivity('Une réponse à un commentaire a été publiée.');
   renderFeed();
-  showSaved();
-  addActivity('Publication supprimée');
+
+  const panel=document.getElementById('debate-'+postId);
+  if(panel)panel.classList.remove('hidden');
 }
+
+function releaseCommentRecording(){
+  clearInterval(commentTimerInterval);
+  commentTimerInterval=null;
+
+  if(commentStream){
+    commentStream.getTracks().forEach(track=>track.stop());
+    commentStream=null;
+  }
+}
+
+function stopCommentRecording(){
+  if(commentRecorder&&commentRecorder.state==='recording'){
+    commentRecorder.stop();
+  }else{
+    releaseCommentRecording();
+  }
+}
+
+async function recordCommentAudio(){
+  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){
+    alert('Ton navigateur ne permet pas l’enregistrement audio. Essaie un navigateur compatible.');
+    return null;
+  }
+
+  if(commentRecorder&&commentRecorder.state==='recording'){
+    alert('Un enregistrement est déjà en cours.');
+    return null;
+  }
+
+  try{
+    commentStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    commentChunks=[];
+
+    const recorderInstance=new MediaRecorder(commentStream);
+    commentRecorder=recorderInstance;
+
+    const result=new Promise((resolve,reject)=>{
+      recorderInstance.ondataavailable=e=>{
+        if(e.data&&e.data.size)commentChunks.push(e.data);
+      };
+
+      recorderInstance.onerror=()=>{
+        releaseCommentRecording();
+        reject(new Error('Erreur pendant l’enregistrement.'));
+      };
+
+      recorderInstance.onstop=()=>{
+        const blob=new Blob(commentChunks,{
+          type:recorderInstance.mimeType||'audio/webm'
+        });
+        releaseCommentRecording();
+        resolve(blob);
+      };
+
+      recorderInstance.start();
+      commentStart=Date.now();
+    });
+
+    return {recorder:recorderInstance,result};
+  }catch(e){
+    releaseCommentRecording();
+    alert('Impossible d’accéder au microphone. Vérifie les autorisations du navigateur.');
+    return null;
+  }
+}
+
+async function openAudioComment(postId){
+  if(megas<1){
+    alert('Il te faut 1 MÉGA pour publier un commentaire audio.');
+    return;
+  }
+
+  const post=posts.find(p=>String(p.id)===String(postId));
+  if(!post)return;
+
+  const status=document.getElementById('audio-comment-status-'+postId);
+  if(!status)return;
+
+  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){
+    alert('Ton navigateur ne permet pas cet enregistrement.');
+    return;
+  }
+
+  if(commentRecorder&&commentRecorder.state==='recording'){
+    alert('Arrête d’abord l’enregistrement audio déjà en cours.');
+    return;
+  }
+
+  status.innerHTML=`
+    <div class="recording-status">
+      <span class="recording-time" id="commentTimer">00:00</span>
+      <div class="waveform active"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <strong>Enregistrement</strong>
+    </div>
+    <button type="button" class="green full" id="stopCommentBtn">⏹ Arrêter et publier</button>
+    <button type="button" class="danger full" id="cancelCommentBtn">Annuler</button>`;
+
+  try{
+    commentStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    commentChunks=[];
+
+    const activeRecorder=new MediaRecorder(commentStream);
+    commentRecorder=activeRecorder;
+    commentStart=Date.now();
+
+    document.getElementById('commentTimer').textContent='00:00';
+    commentTimerInterval=setInterval(()=>{
+      const timer=document.getElementById('commentTimer');
+      if(timer)timer.textContent=formatTime((Date.now()-commentStart)/1000);
+    },500);
+
+    activeRecorder.ondataavailable=e=>{
+      if(e.data&&e.data.size)commentChunks.push(e.data);
+    };
+
+    activeRecorder.onstop=async()=>{
+      const blob=new Blob(commentChunks,{
+        type:activeRecorder.mimeType||'audio/webm'
+      });
+
+      releaseCommentRecording();
+      commentRecorder=null;
+
+      if(blob.size===0){
+        status.innerHTML='';
+        alert('Aucun son n’a été enregistré.');
+        return;
+      }
+
+      if(blob.size>0.5*1024*1024){
+        status.innerHTML='';
+        alert('Le commentaire audio dépasse 0,5 Mo. Enregistre un message plus court.');
+        return;
+      }
+
+      try{
+        const data=await fileToDataURL(blob);
+        post.comments=post.comments||[];
+        post.comments.push({
+          id:safeId(),
+          name:profileName(),
+          text:'',
+          media:[{type:'audio',data}],
+          children:[],
+          date:new Date().toLocaleString()
+        });
+
+        if(!persistPosts()){
+          post.comments.pop();
+          status.innerHTML='';
+          return;
+        }
+
+        megas-=1;
+        updateBalances();
+        addActivity('Un commentaire audio a été publié · 1 MÉGA utilisé.');
+        renderFeed();
+
+        const panel=document.getElementById('debate-'+postId);
+        if(panel)panel.classList.remove('hidden');
+      }catch(e){
+        status.innerHTML='';
+        alert('Impossible de sauvegarder le commentaire audio.');
+      }
+    };
+
+    document.getElementById('stopCommentBtn').onclick=()=>{
+      if(activeRecorder.state==='recording')activeRecorder.stop();
+    };
+
+    document.getElementById('cancelCommentBtn').onclick=()=>{
+      activeRecorder.onstop=()=>{
+        releaseCommentRecording();
+        commentRecorder=null;
+        status.innerHTML='';
+      };
+      if(activeRecorder.state==='recording')activeRecorder.stop();
+    };
+
+    activeRecorder.start();
+  }catch(e){
+    releaseCommentRecording();
+    commentRecorder=null;
+    status.innerHTML='';
+    alert('Autorise le microphone dans ton navigateur.');
+  }
+}
+
+async function startAudioReply(postId,commentId){
+  if(megas<1){
+    alert('Il te faut 1 MÉGA pour publier une réponse audio.');
+    return;
+  }
+
+  if(commentRecorder&&commentRecorder.state==='recording'){
+    alert('Arrête d’abord l’enregistrement audio déjà en cours.');
+    return;
+  }
+
+  const post=posts.find(p=>String(p.id)===String(postId));
+  const parent=post&&findCommentById(post.comments,commentId);
+  if(!post||!parent)return;
+
+  const status=document.getElementById('audio-reply-status-'+commentId);
+  if(!status)return;
+
+  status.innerHTML=`
+    <div class="recording-status">
+      <span class="recording-time" id="replyTimer-${esc(commentId)}">00:00</span>
+      <div class="waveform active"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <strong>Réponse audio</strong>
+    </div>
+    <button type="button" class="green full" id="stopReplyBtn-${esc(commentId)}">⏹ Arrêter et publier</button>
+    <button type="button" class="danger full" id="cancelReplyBtn-${esc(commentId)}">Annuler</button>`;
+
+  try{
+    commentStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    commentChunks=[];
+
+    const activeRecorder=new MediaRecorder(commentStream);
+    commentRecorder=activeRecorder;
+    commentStart=Date.now();
+
+    commentTimerInterval=setInterval(()=>{
+      const timer=document.getElementById('replyTimer-'+commentId);
+      if(timer)timer.textContent=formatTime((Date.now()-commentStart)/1000);
+    },500);
+
+    activeRecorder.ondataavailable=e=>{
+      if(e.data&&e.data.size)commentChunks.push(e.data);
+    };
+
+    activeRecorder.onstop=async()=>{
+      const blob=new Blob(commentChunks,{
+        type:activeRecorder.mimeType||'audio/webm'
+      });
+
+      releaseCommentRecording();
+      commentRecorder=null;
+
+      if(blob.size===0){
+        status.innerHTML='';
+        alert('Aucun son n’a été enregistré.');
+        return;
+      }
+
+      if(blob.size>0.5*1024*1024){
+        status.innerHTML='';
+        alert('La réponse audio dépasse 0,5 Mo. Enregistre un message plus court.');
+        return;
+      }
+
+      try{
+        const data=await fileToDataURL(blob);
+        const currentPost=posts.find(p=>String(p.id)===String(postId));
+        const currentParent=currentPost&&findCommentById(currentPost.comments,commentId);
+        if(!currentPost||!currentParent){
+          status.innerHTML='';
+          return;
+        }
+
+        if(!Array.isArray(currentParent.children))currentParent.children=[];
+        currentParent.children.push({
+          id:safeId(),
+          name:profileName(),
+          text:'',
+          media:[{type:'audio',data}],
+          children:[],
+          date:new Date().toLocaleString()
+        });
+
+        if(!persistPosts()){
+          currentParent.children.pop();
+          status.innerHTML='';
+          return;
+        }
+
+        megas-=1;
+        updateBalances();
+        addActivity('Une réponse audio a été publiée · 1 MÉGA utilisé.');
+        renderFeed();
+
+        const panel=document.getElementById('debate-'+postId);
+        if(panel)panel.classList.remove('hidden');
+      }catch(e){
+        status.innerHTML='';
+        alert('Impossible de sauvegarder la réponse audio.');
+      }
+    };
+
+    document.getElementById('stopReplyBtn-'+commentId).onclick=()=>{
+      if(activeRecorder.state==='recording')activeRecorder.stop();
+    };
+
+    document.getElementById('cancelReplyBtn-'+commentId).onclick=()=>{
+      activeRecorder.onstop=()=>{
+        releaseCommentRecording();
+        commentRecorder=null;
+        status.innerHTML='';
+      };
+      if(activeRecorder.state==='recording')activeRecorder.stop();
+    };
+
+    activeRecorder.start();
+  }catch(e){
+    releaseCommentRecording();
+    commentRecorder=null;
+    status.innerHTML='';
+    alert('Autorise le microphone dans ton navigateur.');
+  }
+}
+
+function votePoll(id,index){
+  const post=posts.find(p=>String(p.id)===String(id));
+  if(!post||!post.poll||post.poll.voted)return;
+
+  if(index<0||index>1)return;
+  post.poll.votes=post.poll.votes||[0,0];
+  post.poll.votes[index]=(Number(post.poll.votes[index])||0)+1;
+  post.poll.voted=true;
+
+  if(!persistPosts()){
+    post.poll.votes[index]--;
+    post.poll.voted=false;
+    return;
+  }
+
+  addActivity('Ton vote au débat a été enregistré.');
+  renderFeed();
+}
+
 function toggleSaved(id){
   const key=String(id);
   if(saved.has(key))saved.delete(key);
   else saved.add(key);
-  saveJSON(SAVED_STORE,[...saved]);
+
+  if(!saveJSON(SAVED_STORE,[...saved]))return;
   showSaved();
   renderFeed();
 }
+
 function showSaved(){
-  const el=document.getElementById('savedPosts');
-  if(!el)return;
-  el.innerHTML='';
-  const list=posts.filter(p=>saved.has(String(p.id)));
-  if(!list.length){
-    el.innerHTML='<p class="empty">Aucun favori enregistré.</p>';
+  const box=document.getElementById('savedPosts');
+  if(!box)return;
+
+  const items=posts.filter(p=>saved.has(String(p.id)));
+  if(!items.length){
+    box.innerHTML='<p class="empty">Aucun favori enregistré.</p>';
     return;
   }
-  list.forEach(p=>{
-    const box=document.createElement('div');
-    box.className='tier';
-    const name=document.createElement('strong');
-    name.textContent=p.name||'Membre';
-    const text=document.createElement('p');
-    text.textContent=p.text||'Publication média';
-    const button=document.createElement('button');
-    button.textContent='Ouvrir';
-    button.onclick=()=>{
-      navigate('home');
-      setTimeout(()=>document.getElementById('post-'+p.id)?.scrollIntoView({behavior:'smooth'}),100);
-    };
-    box.append(name,text,button);
-    el.appendChild(box);
-  });
+
+  box.innerHTML=items.map(p=>`
+    <div class="reply">
+      <strong>${esc(p.name)}</strong>
+      <p>${esc(p.text||'Publication audio ou média')}</p>
+      <button type="button" class="blue full" onclick="navigate('home')">Voir le fil</button>
+    </div>`).join('');
 }
+
+function editPost(id){
+  const post=posts.find(p=>String(p.id)===String(id));
+  if(!post)return;
+
+  if(post.name!==profileName()&&post.name!=='JUNOVABOOK'){
+    alert('Tu peux modifier uniquement tes propres publications.');
+    return;
+  }
+
+  const text=prompt('Modifier le texte de la publication :',post.text||'');
+  if(text===null)return;
+
+  post.text=text.trim();
+  if(!persistPosts())return;
+
+  addActivity('Une publication a été modifiée.');
+  renderFeed();
+}
+
+function deletePost(id){
+  const index=posts.findIndex(p=>String(p.id)===String(id));
+  if(index<0)return;
+
+  if(!confirm('Supprimer cette publication et ses commentaires ?'))return;
+
+  const removed=posts.splice(index,1)[0];
+  if(!persistPosts()){
+    posts.splice(index,0,removed);
+    return;
+  }
+
+  saved.delete(String(id));
+  saveJSON(SAVED_STORE,[...saved]);
+  addActivity('Une publication a été supprimée.');
+  renderFeed();
+  showSaved();
+}
+
+async function sharePost(id){
+  const post=posts.find(p=>String(p.id)===String(id));
+  if(!post)return;
+
+  const text=(post.name||'Membre JUNOVABOOK')+': '+(post.text||'Découvre cette publication sur JUNOVABOOK');
+  const shareData={title:'JUNOVABOOK',text,url:location.href};
+
+  try{
+    if(navigator.share){
+      await navigator.share(shareData);
+    }else if(navigator.clipboard&&navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(text+' '+location.href);
+      alert('Texte copié. Tu peux le partager sur WhatsApp.');
+    }else{
+      prompt('Copie ce texte pour le partager :',text+' '+location.href);
+    }
+  }catch(e){
+    if(e.name!=='AbortError')alert('Le partage a été annulé ou n’est pas disponible.');
+  }
+}
+
 function renderDiscover(){
-  const query=(document.getElementById('discoverSearch').value||'').trim().toLowerCase();
-  const el=document.getElementById('discoverResults');
-  el.innerHTML='';
-  const matches=posts.filter(p=>(p.name+' '+p.text).toLowerCase().includes(query));
-  if(!matches.length){
-    el.innerHTML='<p class="empty">Aucun résultat.</p>';
-    return;
-  }
-  matches.forEach(p=>{
-    const box=document.createElement('div');
-    box.className='tier';
-    const title=document.createElement('strong');
-    title.textContent=p.name;
-    const text=document.createElement('p');
-    text.textContent=p.text||'Publication média';
-    const btn=document.createElement('button');
-    btn.textContent='Voir la publication';
-    btn.onclick=()=>{
-      navigate('home');
-      setTimeout(()=>document.getElementById('post-'+p.id)?.scrollIntoView({behavior:'smooth'}),100);
-    };
-    box.append(title,text,btn);
-    el.appendChild(box);
-  });
+  const box=document.getElementById('discoverResults');
+  if(!box)return;
+
+  const term=(document.getElementById('discoverSearch').value||'').trim().toLowerCase();
+  const matches=posts.filter(p=>
+    (p.text||'').toLowerCase().includes(term)||
+    (p.name||'').toLowerCase().includes(term)
+  );
+
+  box.innerHTML=matches.length?matches.map(p=>`
+    <div class="reply">
+      <strong>${esc(p.name)}</strong>
+      <p>${esc(p.text||'Publication audio ou média')}</p>
+      ${renderMedia(p.media)}
+      <button type="button" class="blue full" onclick="navigate('home')">Voir le fil d’actualité</button>
+    </div>`).join(''):'<p class="empty">Aucun résultat.</p>';
 }
+
 function clearDiscoverSearch(){
   document.getElementById('discoverSearch').value='';
   renderDiscover();
 }
+
 function searchFriends(){
-  const q=document.getElementById('friendSearch').value.trim().toLowerCase();
-  const el=document.getElementById('friendResults');
-  el.innerHTML='';
-  const matches=posts.filter(p=>(p.name||'').toLowerCase().includes(q));
-  if(!q||!matches.length){
-    el.innerHTML='<p class="empty">Aucun membre correspondant dans les publications locales.</p>';
-    return;
-  }
-  [...new Set(matches.map(p=>p.name))].forEach(name=>{
-    const row=document.createElement('div');
-    row.className='tier';
-    row.textContent=name;
-    el.appendChild(row);
-  });
+  const term=(document.getElementById('friendSearch').value||'').trim().toLowerCase();
+  const box=document.getElementById('friendResults');
+
+  const names=[...new Set(posts.map(p=>p.name).filter(Boolean))];
+  const matches=names.filter(name=>name.toLowerCase().includes(term));
+
+  box.innerHTML=matches.length
+    ?matches.map(name=>`<div class="reply">${esc(name)}</div>`).join('')
+    :'<p class="empty">Aucun nom trouvé dans les publications locales.</p>';
 }
-function sharePost(id){
-  const p=posts.find(x=>String(x.id)===String(id));
-  if(!p)return;
-  const text=(p.name||'Membre JUNOVABOOK')+' : '+(p.text||'Découvre cette publication sur JUNOVABOOK.');
-  const url=location.href.split('#')[0];
-  if(navigator.share){
-    navigator.share({title:'JUNOVABOOK',text,url})
-      .then(()=>addActivity('Publication partagée'))
-      .catch(()=>{});
-  }else{
-    window.open('https://wa.me/?text='+encodeURIComponent(text+' '+url),'_blank','noopener');
-  }
-}
-function claimFreeMegas(){
-  megas+=3;
-  updateBalances();
-  addActivity('3 MÉGAS gratuits réclamés');
-  alert('3 MÉGAS ajoutés.');
-}
+
 function saveProfile(){
   const name=document.getElementById('displayName').value.trim();
   if(!name){
-    alert('Saisis un nom.');
+    alert('Saisis un nom ou un pseudonyme.');
     return;
   }
+
   localStorage.setItem(PROFILE_STORE,name);
-  addActivity('Nom de profil enregistré');
-  renderFeed();
+  addActivity('Ton nom de profil a été enregistré.');
   alert('Nom enregistré sur cet appareil.');
 }
+
 function loadProfile(){
   document.getElementById('displayName').value=localStorage.getItem(PROFILE_STORE)||'';
 }
+
 function applyColors(){
-  const ids={
-    accentColor:'--accent',homeColor:'--home',friendsColor:'--friends',
-    createColor:'--create',messagesColor:'--messages',profileColor:'--profile'
+  const mapping={
+    '--accent':'accentColor',
+    '--home':'homeColor',
+    '--friends':'friendsColor',
+    '--create':'createColor',
+    '--messages':'messagesColor',
+    '--profile':'profileColor'
   };
-  Object.entries(ids).forEach(([id,variable])=>{
-    const color=document.getElementById(id).value;
-    document.documentElement.style.setProperty(variable,color);
-    localStorage.setItem('junovabook_color_'+id,color);
-  });
-  addActivity('Couleurs personnalisées appliquées');
+
+  for(const [variable,id] of Object.entries(mapping)){
+    const value=document.getElementById(id).value;
+    document.documentElement.style.setProperty(variable,value);
+    localStorage.setItem('junovabook_color_'+variable,value);
+  }
+
+  alert('Les couleurs ont été appliquées et sauvegardées.');
 }
+
 function loadColors(){
-  const map={
-    accentColor:'--accent',homeColor:'--home',friendsColor:'--friends',
-    createColor:'--create',messagesColor:'--messages',profileColor:'--profile'
+  const mapping={
+    '--accent':'accentColor',
+    '--home':'homeColor',
+    '--friends':'friendsColor',
+    '--create':'createColor',
+    '--messages':'messagesColor',
+    '--profile':'profileColor'
   };
-  Object.entries(map).forEach(([id,variable])=>{
-    const color=localStorage.getItem('junovabook_color_'+id);
-    if(color){
-      document.getElementById(id).value=color;
-      document.documentElement.style.setProperty(variable,color);
+
+  for(const [variable,id] of Object.entries(mapping)){
+    const value=localStorage.getItem('junovabook_color_'+variable);
+    if(value){
+      document.documentElement.style.setProperty(variable,value);
+      document.getElementById(id).value=value;
     }
-  });
+  }
 }
+
+function claimFreeMegas(){
+  megas+=3;
+  updateBalances();
+  addActivity('3 MÉGAS gratuits ont été ajoutés à ton solde.');
+  alert('3 MÉGAS gratuits ajoutés.');
+}
+
 function clearLocalPosts(){
-  if(!confirm('Effacer toutes les publications enregistrées sur cet appareil ?'))return;
+  if(!confirm('Effacer toutes les publications et commentaires de cet appareil ?'))return;
+
   posts=[];
   saved.clear();
   persistPosts();
   saveJSON(SAVED_STORE,[]);
   renderFeed();
   showSaved();
-  addActivity('Publications locales effacées');
+  alert('Les publications locales ont été effacées.');
 }
+
 async function installApp(){
   if(deferredInstallPrompt){
     deferredInstallPrompt.prompt();
     await deferredInstallPrompt.userChoice;
     deferredInstallPrompt=null;
-  }else{
-    alert('Dans le menu du navigateur, choisis « Ajouter à l’écran d’accueil » si cette option est disponible.');
+    return;
   }
+
+  alert('Dans Firefox, ouvre le menu du navigateur puis choisis « Ajouter à l’écran d’accueil » si cette option est disponible.');
 }
+
 window.addEventListener('beforeinstallprompt',event=>{
   event.preventDefault();
   deferredInstallPrompt=event;
 });
-async function openAudioComment(id){
-  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){
-    alert('L’enregistrement audio n’est pas disponible dans ce navigateur.');
-    return;
-  }
-  if(megas<1){
-    alert('Il te faut au moins 1 MÉGA.');
-    return;
-  }
-  try{
-    commentStream=await navigator.mediaDevices.getUserMedia({audio:true});
-    commentChunks=[];
-    commentRecorder=new MediaRecorder(commentStream);
-    const status=document.getElementById('debate-'+id);
-    const box=document.createElement('div');
-    box.className='recording-status';
-    const timer=document.createElement('span');
-    timer.className='recording-time';
-    timer.textContent='00:00';
-    const stop=document.createElement('button');
-    stop.textContent='Arrêter et publier';
-    box.append(timer,stop);
-    status.appendChild(box);
-    commentStart=Date.now();
-    commentTimerInterval=setInterval(()=>{
-      timer.textContent=formatTime((Date.now()-commentStart)/1000);
-    },500);
-    commentRecorder.ondataavailable=e=>{
-      if(e.data.size)commentChunks.push(e.data);
-    };
-    commentRecorder.onstop=async()=>{
-      clearInterval(commentTimerInterval);
-      commentStream?.getTracks().forEach(t=>t.stop());
-      commentStream=null;
-      box.remove();
-  const blob = new Blob(commentChunks, {
-  type: commentRecorder.mimeType || 'audio/webm'
-});
 
-if (blob.size > 2.5 * 1024 * 1024) {
-  alert('L’audio dépasse 2,5 Mo. Choisis un fichier plus petit.');
-  return;
-}
-
-try {
-  const data = await fileToDataURL(blob);
-        const p=posts.find(x=>String(x.id)===String(id));
-        if(!p)return;
-        p.comments.push({
-          id:safeId(),name:profileName(),text:'Commentaire vocal',
-          media:[{type:'audio',data}],children:[],date:new Date().toISOString()
-        });
-        if(persistPosts()){
-          megas-=1;
-          updateBalances();
-          renderFeed();
-          document.getElementById('debate-'+id)?.classList.remove('hidden');
-          addActivity('Commentaire audio publié · 1 MÉGA utilisé');
-        }
-      }catch(e){
-        alert('Impossible de sauvegarder le commentaire audio.');
-      }
-    };
-    stop.onclick=()=>{
-      if(commentRecorder&&commentRecorder.state==='recording')commentRecorder.stop();
-    };
-    commentRecorder.start();
-  }catch(e){
-    alert('Autorise le microphone pour enregistrer un commentaire.');
-  }
-}
 function registerServiceWorker(){
-  if('serviceWorker' in navigator&&location.protocol==='https:'){
-    navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
-  }
+  if(!('serviceWorker' in navigator))return;
+
+  // Un véritable service worker nécessite un fichier séparé.
+  // Cette fonction n'effectue aucune installation réseau.
 }
+
 document.getElementById('discoverSearch').addEventListener('input',renderDiscover);
+
 window.addEventListener('storage',event=>{
-  if(event.key===STORE){
+  if([STORE,SAVED_STORE,ACTIVITY_STORE,MEGAS_STORE,NOVAS_STORE,PROFILE_STORE].includes(event.key)){
     posts=readJSON(STORE,[]);
+    saved=new Set(readJSON(SAVED_STORE,[]).map(String));
+    activities=readJSON(ACTIVITY_STORE,[]);
+    megas=Number(localStorage.getItem(MEGAS_STORE)??20);
+    novas=Number(localStorage.getItem(NOVAS_STORE)??0);
+    updateBalances();
     renderFeed();
+    renderActivities();
     showSaved();
   }
 });
+
 init();
 </script>
 </body>
- </html>
+</html>
