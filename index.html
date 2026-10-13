@@ -982,13 +982,17 @@ async function openAudioComment(id){
       commentStream?.getTracks().forEach(t=>t.stop());
       commentStream=null;
       box.remove();
-      const blob=new Blob(commentChunks,{type:commentRecorder.mimeType||'audio/webm'});
-      if(blob.size>900*1024){
-        alert('L’audio dépasse 900 Ko.');
-        return;
-      }
-      try{
-        const data=await fileToDataURL(blob);
+  const blob = new Blob(commentChunks, {
+  type: commentRecorder.mimeType || 'audio/webm'
+});
+
+if (blob.size > 2.5 * 1024 * 1024) {
+  alert('L’audio dépasse 2,5 Mo. Choisis un fichier plus petit.');
+  return;
+}
+
+try {
+  const data = await fileToDataURL(blob);
         const p=posts.find(x=>String(x.id)===String(id));
         if(!p)return;
         p.comments.push({
