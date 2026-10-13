@@ -557,14 +557,17 @@ function showVoicePreview(blob){
   box.appendChild(audio);
   box.classList.remove('hidden');
 }
-document.getElementById('voiceFile').addEventListener('change',function(){
-  const file=this.files[0];
-  if(!file)return;
-  if(file.size>900*1024){
-    alert('Le fichier audio dépasse 900 Ko.');
-    this.value='';
+
+document.getElementById('voiceFile').addEventListener('change', function(){
+  const file = this.files[0];
+  if(!file) return;
+
+  if(file.size > 2.5 * 1024 * 1024){
+    alert('Le fichier audio dépasse 2,5 Mo.');
+    this.value = '';
     return;
   }
+
   voiceBlob=file;
   showVoicePreview(file);
   document.getElementById('publishVoiceBtn').disabled=false;
