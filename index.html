@@ -716,8 +716,7 @@ function renderFeed(){
       </div>
 
       ${post.type==='debat'?'<span class="pill">🗣️ DÉBAT</span>':''}
-      ${post.type==='voice'?'<span class="pill">🎙️ MA VOIX JUNOVA</span>':''}
-
+${post.type==='voice'?'<span class="pill">🎙️ MA VOIX<br>JUNOVA</span>':''}
       ${post.text?`<p>${esc(post.text)}</p>`:''}
       ${renderMedia(post.media)}
 
