@@ -277,22 +277,27 @@ label{display:block;font-size:13px;margin:8px 0}
   padding-left:12px;
 }
 
-@media(max-width:380px){
-  .reply{
-    padding:9px 10px;
-  }
+/* LECTEUR AUDIO JUNOVA : SANS HAUT-PARLEUR ET PLUS COMPACT */
+.reply audio,
+.audio-box audio,
+.media-preview + audio{
+  width:220px !important;
+  max-width:70% !important;
+  height:36px !important;
+  margin-top:8px !important;
+  border-radius:20px !important;
+}
 
-  .reply .row button{
-    flex:1 1 100%;
-  }
+audio::-webkit-media-controls-mute-button{
+  display:none !important;
+}
 
-  .reply-children,
-  .reply-children .reply-children{
-    margin-left:-13px;
-    margin-inline-start:-13px;
-    width:calc(100% + 13px);
-    max-width:calc(100% + 13px);
-  }
+audio::-webkit-media-controls-volume-slider{
+  display:none !important;
+}
+
+audio::-webkit-media-controls-timeline{
+  max-width:110px !important;
   }
 .media-preview{width:100%;max-height:350px;object-fit:contain;border-radius:10px;margin-top:8px;background:#100d20}
 .preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
