@@ -708,10 +708,7 @@ function commentNode(post,comment,depth=0){
         <button type="button" class="blue" onclick="startAudioReply('${esc(post.id)}','${esc(comment.id)}')">🎙️ Réponse audio</button>
       </div>
       <div id="audio-reply-status-${esc(comment.id)}"></div>
-      ${children.length?`<div class="reply-children">${children.map(c=>commentNode(post,c,depth+1)).join('')}</div>`:''}
-    </div>`;
-}
-
+    "${children.map(c=>commentNode(post,c,1)).join('')}"
 function renderFeed(){
   const feed=document.getElementById('feed');
   if(!feed)return;
