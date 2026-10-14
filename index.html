@@ -63,31 +63,88 @@ label{display:block;font-size:13px;margin:8px 0}
 .actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:12px}
 .actions button{margin:0;padding:11px 2px;font-size:12px;width:100%;min-width:0}
 .debate-panel,.audio-box{background:#19122a;border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:12px}
-.comment-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
-.reply{padding:10px;background:#19122a;border:1px solid var(--border);border-radius:10px;overflow-wrap:anywhere}
-.reply-children{
-  margin:6px 0 0 3px;
-  padding-left:4px;
-  border-left:1px solid #655080;
+
+/* NOUVELLE APPARENCE DES COMMENTAIRES */
+.comment-list{
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:10px;
+  margin-top:12px;
   min-width:0;
   max-width:100%;
-  box-sizing:border-box;
 }
-
 .reply{
+  position:relative;
+  width:100%;
   min-width:0;
   max-width:100%;
-  box-sizing:border-box;
+  padding:12px 12px 12px 16px;
+  background:linear-gradient(135deg,#1d1531,#19122a);
+  border:1px solid #574471;
+  border-left:4px solid var(--blue);
+  border-radius:14px;
   overflow-wrap:anywhere;
+  box-shadow:0 4px 14px rgba(0,0,0,.18);
+}
+.reply.is-reply{
+  border-left-color:var(--messages);
+  background:linear-gradient(135deg,#201734,#1a1330);
+}
+.reply::before{
+  content:"";
+  position:absolute;
+  left:-8px;
+  top:22px;
+  width:8px;
+  height:2px;
+  background:#655080;
+}
+.comment-badge{
+  display:inline-block;
+  font-size:10px;
+  font-weight:bold;
+  letter-spacing:.4px;
+  padding:3px 8px;
+  border-radius:20px;
+  margin-bottom:6px;
+  background:#245fbd;
+  color:white;
+}
+.reply.is-reply .comment-badge{background:var(--messages)}
+.comment-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:4px;
+}
+.comment-head strong{font-size:14px}
+.reply .row{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin-top:8px;
+  min-width:0;
+}
+.reply .row button{
+  flex:1 1 130px;
+  min-width:0;
+  margin:0;
+  font-size:11px;
+  padding:9px 6px;
+}
+.reply-children{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin:10px 0 0;
+  padding:0;
+  border:0;
+  min-width:0;
+  max-width:100%;
 }
 
-.reply .row{
-  flex-wrap:wrap;
-  min-width:0;
-  }
 .media-preview{width:100%;max-height:350px;object-fit:contain;border-radius:10px;margin-top:8px;background:#100d20}
 .preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .preview-grid img{width:100%;max-height:170px;object-fit:cover;border-radius:8px}
@@ -106,7 +163,13 @@ label{display:block;font-size:13px;margin:8px 0}
 .bottom button{flex:1;min-width:66px;white-space:nowrap;margin:0;padding:10px 3px;border-radius:7px;font-size:11px}
 footer{text-align:center;color:#8f82a8;font-size:11px;padding:20px}
 hr{border:0;border-top:1px solid var(--border);margin:18px 0}
-@media(max-width:380px){.actions{gap:3px}.actions button{font-size:10px}.novas-logo{width:75px}}
+@media(max-width:380px){
+  .actions{gap:3px}
+  .actions button{font-size:10px}
+  .novas-logo{width:75px}
+  .reply{padding:10px 10px 10px 14px}
+  .reply .row button{flex:1 1 100%}
+}
 </style>
 </head>
 <body>
@@ -134,10 +197,9 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
     <div id="expressionChoices" class="row hidden">
       <button class="primary" onclick="showComposer('publication')">PUBLICATION LIBRE</button>
       <button class="green" onclick="showComposer('debat')">LANCER UN DÉBAT</button>
-     <<button class="blue" onclick="openVoiceComposer()" style="white-space:normal; line-height:1.3; text-align:center;">
-  🎙️ MA VOIX<br>JUNOVA
-     </button>
-     </button>
+      <button class="blue" onclick="openVoiceComposer()" style="white-space:normal; line-height:1.3; text-align:center;">
+        🎙️ MA VOIX<br>JUNOVA
+      </button>
     </div>
   </div>
 
@@ -197,9 +259,7 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
   <button class="blue full" onclick="renderDiscover()">Rechercher</button>
   <button class="full" onclick="clearDiscoverSearch()">Effacer la recherche</button>
   <div id="discoverResults"></div>
-</section>
-
-<section id="friends" class="panel hidden">
+  </section><section id="friends" class="panel hidden">
   <h2>AMI</h2>
   <p>La recherche réelle de membres nécessite un serveur commun.</p>
   <label for="friendSearch">Rechercher un nom dans ce prototype</label>
@@ -286,7 +346,9 @@ const SAVED_STORE='junovabook_saved';
 const PROFILE_STORE='junovabook_profile';
 const ACTIVITY_STORE='junovabook_activities';
 const MEGAS_STORE='junovabook_megas';
-const NOVAS_STORE='junovabook_novas';let posts=[];
+const NOVAS_STORE='junovabook_novas';
+
+let posts=[];
 let saved=new Set();
 let activities=[];
 let megas=20;
@@ -311,6 +373,7 @@ function readJSON(key,fallback){
     return value===null?fallback:JSON.parse(value);
   }catch(e){return fallback}
 }
+
 function saveJSON(key,value){
   try{
     localStorage.setItem(key,JSON.stringify(value));
@@ -320,12 +383,15 @@ function saveJSON(key,value){
     return false;
   }
 }
+
 function esc(value){
   return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+
 function safeId(){
   return Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 }
+
 function profileName(){
   return (localStorage.getItem(PROFILE_STORE)||'Membre JUNOVABOOK').trim()||'Membre JUNOVABOOK';
 }
@@ -345,19 +411,26 @@ function init(){
 
   if(!posts.length){
     posts=[{
-      id:safeId(),name:'JUNOVABOOK',
+      id:safeId(),
+      name:'JUNOVABOOK',
       text:'Bienvenue sur JUNOVABOOK ! Partage tes idées et lance des débats respectueux.',
-      media:[],date:new Date().toISOString(),loves:0,comments:[],
-      type:'publication',poll:null
+      media:[],
+      date:new Date().toISOString(),
+      loves:0,
+      comments:[],
+      type:'publication',
+      poll:null
     }];
     persistPosts();
   }
   renderFeed();
   registerServiceWorker();
 }
+
 function persistPosts(){
   return saveJSON(STORE,posts);
 }
+
 function updateBalances(){
   document.getElementById('megasCount').textContent=megas;
   document.getElementById('profileMegas').textContent=megas;
@@ -366,20 +439,24 @@ function updateBalances(){
   localStorage.setItem(MEGAS_STORE,String(megas));
   localStorage.setItem(NOVAS_STORE,String(novas));
 }
+
 function addActivity(text){
   activities.unshift({id:safeId(),text,time:new Date().toLocaleString(),read:false});
   activities=activities.slice(0,100);
   saveJSON(ACTIVITY_STORE,activities);
   renderActivities();
 }
+
 function renderActivities(){
   const el=document.getElementById('activityList');
   if(!el)return;
   el.innerHTML='';
+
   if(!activities.length){
     el.innerHTML='<p class="empty">Aucune notification.</p>';
     return;
   }
+
   activities.forEach(a=>{
     const div=document.createElement('div');
     div.className='activity';
@@ -387,17 +464,20 @@ function renderActivities(){
     el.appendChild(div);
   });
 }
+
 function markActivitiesRead(){
   activities=activities.map(a=>({...a,read:true}));
   saveJSON(ACTIVITY_STORE,activities);
   renderActivities();
 }
+
 function clearActivities(){
   if(!confirm('Effacer les notifications locales ?'))return;
   activities=[];
   saveJSON(ACTIVITY_STORE,activities);
   renderActivities();
 }
+
 function navigate(section){
   document.querySelectorAll('main > section').forEach(el=>el.classList.add('hidden'));
   const target=document.getElementById(section);
@@ -408,11 +488,13 @@ function navigate(section){
   if(section==='junovas')renderActivities();
   window.scrollTo({top:0,behavior:'smooth'});
 }
+
 function toggleExpression(){
   const box=document.getElementById('expressionChoices');
   box.classList.toggle('hidden');
   document.getElementById('expressionButton').setAttribute('aria-expanded',String(!box.classList.contains('hidden')));
 }
+
 function showComposer(mode){
   composerMode=mode;
   document.getElementById('composer').classList.remove('hidden');
@@ -426,9 +508,11 @@ function showComposer(mode){
   document.getElementById('composer').classList.remove('hidden');
   document.getElementById('postText').focus();
 }
+
 function hideComposer(){
   document.getElementById('composer').classList.add('hidden');
 }
+
 function fileToDataURL(file){
   return new Promise((resolve,reject)=>{
     const reader=new FileReader();
@@ -448,6 +532,7 @@ document.getElementById('postMedia').addEventListener('change',async function(){
     this.value='';
     return;
   }
+
   if(files.some(f=>!f.type.startsWith('image/'))&&files.length>1){
     alert('Pour une vidéo, sélectionne un seul fichier.');
     this.value='';
@@ -472,6 +557,7 @@ async function publish(){
     alert('Écris un message ou ajoute un média.');
     return;
   }
+
   if(composerMode==='debat'&&
     (!document.getElementById('optionA').value.trim()||
      !document.getElementById('optionB').value.trim())){
@@ -480,6 +566,7 @@ async function publish(){
   }
 
   const media=[];
+
   try{
     for(const file of files){
       if(file.size>2.5*1024*1024){
@@ -498,22 +585,31 @@ async function publish(){
   }
 
   const post={
-    id:safeId(),name:profileName(),text,media,
-    date:new Date().toISOString(),loves:0,comments:[],
+    id:safeId(),
+    name:profileName(),
+    text,
+    media,
+    date:new Date().toISOString(),
+    loves:0,
+    comments:[],
     type:composerMode,
     poll:composerMode==='debat'?{
       options:[
         document.getElementById('optionA').value.trim(),
         document.getElementById('optionB').value.trim()
       ],
-      votes:[0,0],voted:false
+      votes:[0,0],
+      voted:false
     }:null
   };
+
   posts.unshift(post);
+
   if(!persistPosts()){
     posts.shift();
     return;
   }
+
   addActivity(composerMode==='debat'?'Nouveau débat publié':'Nouvelle publication publiée');
   hideComposer();
   renderFeed();
@@ -524,6 +620,7 @@ function openVoiceComposer(){
   document.getElementById('composer').classList.add('hidden');
   document.getElementById('voiceComposer').classList.remove('hidden');
 }
+
 function cancelVoiceComposer(){
   stopVoiceRecording();
   voiceBlob=null;
@@ -533,13 +630,17 @@ function cancelVoiceComposer(){
   document.getElementById('publishVoiceBtn').disabled=true;
   document.getElementById('voiceComposer').classList.add('hidden');
 }
+
 function formatTime(seconds){
   const s=Math.max(0,Math.floor(seconds));
   return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
 }
+
 function startTimer(elementId,start){
   const el=document.getElementById(elementId);
-  return setInterval(()=>{el.textContent=formatTime((Date.now()-start)/1000)},500);
+  return setInterval(()=>{
+    el.textContent=formatTime((Date.now()-start)/1000);
+  },500);
 }
 
 async function toggleVoiceRecording(){
@@ -547,17 +648,21 @@ async function toggleVoiceRecording(){
     stopVoiceRecording();
     return;
   }
+
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){
     alert('Ton navigateur ne permet pas cet enregistrement. Choisis un fichier audio à la place.');
     return;
   }
+
   try{
     recordingStream=await navigator.mediaDevices.getUserMedia({audio:true});
     recordingChunks=[];
     recorder=new MediaRecorder(recordingStream);
+
     recorder.ondataavailable=e=>{
       if(e.data.size)recordingChunks.push(e.data);
     };
+
     recorder.onstop=()=>{
       voiceBlob=new Blob(recordingChunks,{type:recorder.mimeType||'audio/webm'});
       recordingStream?.getTracks().forEach(t=>t.stop());
@@ -574,10 +679,12 @@ async function toggleVoiceRecording(){
         document.getElementById('recordVoiceBtn').textContent='🔴 Réenregistrer';
         return;
       }
+
       showVoicePreview(voiceBlob);
       document.getElementById('publishVoiceBtn').disabled=false;
       document.getElementById('recordVoiceBtn').textContent='🔴 Réenregistrer';
     };
+
     voiceStart=Date.now();
     document.getElementById('voiceTimer').textContent='00:00';
     document.getElementById('voiceRecordingStatus').classList.remove('hidden');
@@ -589,6 +696,7 @@ async function toggleVoiceRecording(){
     alert('Autorise le microphone ou sélectionne un fichier audio.');
   }
 }
+
 function stopVoiceRecording(){
   if(recorder&&recorder.state==='recording')recorder.stop();
   if(recordingStream){
@@ -598,6 +706,7 @@ function stopVoiceRecording(){
   clearInterval(voiceTimerInterval);
   document.getElementById('voiceWave').classList.remove('active');
 }
+
 function showVoicePreview(blob){
   const box=document.getElementById('voicePreview');
   box.innerHTML='';
@@ -606,11 +715,10 @@ function showVoicePreview(blob){
   audio.src=URL.createObjectURL(blob);
   box.appendChild(audio);
   box.classList.remove('hidden');
-}
-
-document.getElementById('voiceFile').addEventListener('change',function(){
+}document.getElementById('voiceFile').addEventListener('change',function(){
   const file=this.files[0];
   if(!file)return;
+
   if(file.size>2.5*1024*1024){
     alert('Le fichier audio dépasse 2,5 Mo.');
     this.value='';
@@ -618,6 +726,7 @@ document.getElementById('voiceFile').addEventListener('change',function(){
     document.getElementById('publishVoiceBtn').disabled=true;
     return;
   }
+
   voiceBlob=file;
   showVoicePreview(file);
   document.getElementById('publishVoiceBtn').disabled=false;
@@ -628,34 +737,47 @@ async function publishVoice(){
     alert('Il te faut 5 MÉGAS. Réclame d’abord les MÉGAS gratuits dans ton profil.');
     return;
   }
+
   const file=document.getElementById('voiceFile').files[0];
   const blob=file||voiceBlob;
+
   if(!blob){
     alert('Enregistre ta voix ou choisis un fichier audio.');
     return;
   }
+
   try{
     if(file&&file.size>2.5*1024*1024){
       alert('Le fichier audio dépasse 2,5 Mo.');
       return;
     }
+
     if(!file&&blob.size>0.5*1024*1024){
       alert('L’enregistrement vocal dépasse 0,5 Mo.');
       return;
     }
+
     const data=await fileToDataURL(blob);
+
     const post={
-      id:safeId(),name:profileName(),
+      id:safeId(),
+      name:profileName(),
       text:document.getElementById('voiceText').value.trim(),
       media:[{type:'audio',data}],
-      date:new Date().toISOString(),loves:0,comments:[],
-      type:'voice',poll:null
+      date:new Date().toISOString(),
+      loves:0,
+      comments:[],
+      type:'voice',
+      poll:null
     };
+
     posts.unshift(post);
+
     if(!persistPosts()){
       posts.shift();
       return;
     }
+
     megas-=5;
     updateBalances();
     addActivity('Publication vocale publiée · 5 MÉGAS utilisés');
@@ -664,51 +786,78 @@ async function publishVoice(){
   }catch(e){
     alert('Impossible de sauvegarder cet audio.');
   }
-  }function mediaHTML(media){
+}
+
+function mediaHTML(media){
   if(!media)return '';
+
   if(media.type==='audio'){
     return `<audio controls preload="metadata" src="${esc(media.data)}"></audio>`;
   }
+
   if(media.type==='video'){
     return `<video class="media-preview" controls preload="metadata" src="${esc(media.data)}"></video>`;
   }
+
   return `<img class="media-preview" src="${esc(media.data)}" alt="Média de la publication">`;
 }
 
 function renderMedia(media){
   if(!Array.isArray(media)||!media.length)return '';
+
   if(media.length>1){
     return `<div class="preview-grid">${media.map(m=>mediaHTML(m)).join('')}</div>`;
   }
+
   return media.map(m=>mediaHTML(m)).join('');
 }
 
 function findCommentById(comments,id){
   for(const comment of comments||[]){
     if(String(comment.id)===String(id))return comment;
+
     const found=findCommentById(comment.children,id);
     if(found)return found;
   }
+
   return null;
 }
 
 function commentNode(post,comment,depth=0){
   const children=Array.isArray(comment.children)?comment.children:[];
   const media=Array.isArray(comment.media)?comment.media:[];
-  const safeDepth=Math.min(depth,5);
+  const isReply=depth>0;
+  const hasAudio=media.some(m=>m.type==='audio');
+  const badge=isReply?'↳ RÉPONSE':'💬 COMMENTAIRE';
+  const audioBadge=hasAudio?' 🎙️ AUDIO':'';
 
   return `
-    <div class="reply" id="comment-${esc(comment.id)}">
-      <strong>${esc(comment.name||'Membre JUNOVABOOK')}</strong>
-      <small> · ${esc(comment.date||'')}</small>
+    <div class="reply ${isReply?'is-reply':''}" id="comment-${esc(comment.id)}">
+      <span class="comment-badge">${badge}${audioBadge}</span>
+      <div class="comment-head">
+        <strong>${esc(comment.name||'Membre JUNOVABOOK')}</strong>
+        <small>${esc(comment.date||'')}</small>
+      </div>
+
       ${comment.text?`<p>${esc(comment.text)}</p>`:''}
       ${media.map(m=>mediaHTML(m)).join('')}
+
       <div class="row">
         <button type="button" onclick="replyToComment('${esc(post.id)}','${esc(comment.id)}')">↩ Répondre</button>
         <button type="button" class="blue" onclick="startAudioReply('${esc(post.id)}','${esc(comment.id)}')">🎙️ Réponse audio</button>
       </div>
+
       <div id="audio-reply-status-${esc(comment.id)}"></div>
-    "${children.map(c=>commentNode(post,c,1)).join('')}"
+
+      ${children.length?`
+        <div class="reply-children">
+          ${children.map(c=>commentNode(post,c,depth+1)).join('')}
+        </div>
+      `:''}
+    </div>
+  `;
+}
+
 function renderFeed(){
   const feed=document.getElementById('feed');
   if(!feed)return;
@@ -722,6 +871,7 @@ function renderFeed(){
 
   posts.forEach(post=>{
     if(!Array.isArray(post.comments))post.comments=[];
+
     const comments=post.comments;
     const isSaved=saved.has(String(post.id));
     const poll=post.poll;
@@ -736,7 +886,8 @@ function renderFeed(){
       </div>
 
       ${post.type==='debat'?'<span class="pill">🗣️ DÉBAT</span>':''}
-${post.type==='voice'?'<span class="pill">🎙️ MA VOIX<br>JUNOVA</span>':''}
+      ${post.type==='voice'?'<span class="pill">🎙️ MA VOIX<br>JUNOVA</span>':''}
+
       ${post.text?`<p>${esc(post.text)}</p>`:''}
       ${renderMedia(post.media)}
 
@@ -755,8 +906,10 @@ ${post.type==='voice'?'<span class="pill">🎙️ MA VOIX<br>JUNOVA</span>':''}
       <div class="actions">
         <button type="button" style="background:var(--accent)"
           onclick="lovePost('${esc(post.id)}')">❤️ ${Number(post.loves)||0} LOVES</button>
+
         <button type="button" style="background:#245fbd"
           onclick="toggleComments('${esc(post.id)}')">💬 DÉBATTRE (${comments.length})</button>
+
         <button type="button" style="background:#16815f"
           onclick="sharePost('${esc(post.id)}')">↗ DIFFUSER</button>
       </div>
@@ -765,20 +918,26 @@ ${post.type==='voice'?'<span class="pill">🎙️ MA VOIX<br>JUNOVA</span>':''}
         <button type="button" onclick="toggleSaved('${esc(post.id)}')">
           ${isSaved?'★ Retirer des favoris':'☆ Ajouter aux favoris'}
         </button>
+
         <button type="button" onclick="editPost('${esc(post.id)}')">✏️ Modifier</button>
+
         <button type="button" class="danger" onclick="deletePost('${esc(post.id)}')">Supprimer</button>
       </div>
 
       <div id="debate-${esc(post.id)}" class="debate-panel hidden">
         <h3>💬 Discussion</h3>
+
         <label for="comment-text-${esc(post.id)}">Ton commentaire</label>
         <textarea id="comment-text-${esc(post.id)}" maxlength="2000"
           placeholder="Écris ton commentaire..."></textarea>
+
         <div class="row">
           <button type="button" class="blue" onclick="addComment('${esc(post.id)}')">Envoyer</button>
           <button type="button" class="primary" onclick="openAudioComment('${esc(post.id)}')">🎙️ Commentaire audio</button>
         </div>
+
         <div id="audio-comment-status-${esc(post.id)}"></div>
+
         <div class="comment-list">
           ${comments.length?comments.map(c=>commentNode(post,c)).join(''):'<p class="empty">Aucun commentaire. Lance la discussion !</p>'}
         </div>
@@ -786,35 +945,30 @@ ${post.type==='voice'?'<span class="pill">🎙️ MA VOIX<br>JUNOVA</span>':''}
 
     feed.appendChild(card);
   });
-}
+  }function lovePost(id){
+  const post=posts.find(p=>String(p.id)===String(id));
+  if(!post)return;
 
+  if(!Array.isArray(post.lovedBy))post.lovedBy=[];
 
-function lovePost(id){
-  const post = posts.find(p => String(p.id) === String(id));
-  if (!post) return;
+  const me='junova_local_user';
+  const alreadyLoved=post.lovedBy.includes(me);
 
-  if (!Array.isArray(post.lovedBy)) {
-    post.lovedBy = [];
-  }
-
-  const me = 'junova_local_user';
-  const alreadyLoved = post.lovedBy.includes(me);
-
-  if (alreadyLoved) {
-    post.lovedBy = post.lovedBy.filter(user => user !== me);
-    post.loves = Math.max(0, (Number(post.loves) || 0) - 1);
-  } else {
+  if(alreadyLoved){
+    post.lovedBy=post.lovedBy.filter(user=>user!==me);
+    post.loves=Math.max(0,(Number(post.loves)||0)-1);
+  }else{
     post.lovedBy.push(me);
-    post.loves = (Number(post.loves) || 0) + 1;
+    post.loves=(Number(post.loves)||0)+1;
   }
 
-  if (!persistPosts()) {
-    if (alreadyLoved) {
+  if(!persistPosts()){
+    if(alreadyLoved){
       post.lovedBy.push(me);
       post.loves++;
-    } else {
-      post.lovedBy = post.lovedBy.filter(user => user !== me);
-      post.loves = Math.max(0, post.loves - 1);
+    }else{
+      post.lovedBy=post.lovedBy.filter(user=>user!==me);
+      post.loves=Math.max(0,post.loves-1);
     }
     return;
   }
@@ -873,6 +1027,7 @@ function replyToComment(postId,commentId){
   if(text===null||!text.trim())return;
 
   if(!Array.isArray(comment.children))comment.children=[];
+
   comment.children.push({
     id:safeId(),
     name:profileName(),
@@ -909,54 +1064,6 @@ function stopCommentRecording(){
     commentRecorder.stop();
   }else{
     releaseCommentRecording();
-  }
-}
-
-async function recordCommentAudio(){
-  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){
-    alert('Ton navigateur ne permet pas l’enregistrement audio. Essaie un navigateur compatible.');
-    return null;
-  }
-
-  if(commentRecorder&&commentRecorder.state==='recording'){
-    alert('Un enregistrement est déjà en cours.');
-    return null;
-  }
-
-  try{
-    commentStream=await navigator.mediaDevices.getUserMedia({audio:true});
-    commentChunks=[];
-
-    const recorderInstance=new MediaRecorder(commentStream);
-    commentRecorder=recorderInstance;
-
-    const result=new Promise((resolve,reject)=>{
-      recorderInstance.ondataavailable=e=>{
-        if(e.data&&e.data.size)commentChunks.push(e.data);
-      };
-
-      recorderInstance.onerror=()=>{
-        releaseCommentRecording();
-        reject(new Error('Erreur pendant l’enregistrement.'));
-      };
-
-      recorderInstance.onstop=()=>{
-        const blob=new Blob(commentChunks,{
-          type:recorderInstance.mimeType||'audio/webm'
-        });
-        releaseCommentRecording();
-        resolve(blob);
-      };
-
-      recorderInstance.start();
-      commentStart=Date.now();
-    });
-
-    return {recorder:recorderInstance,result};
-  }catch(e){
-    releaseCommentRecording();
-    alert('Impossible d’accéder au microphone. Vérifie les autorisations du navigateur.');
-    return null;
   }
 }
 
@@ -1000,6 +1107,7 @@ async function openAudioComment(postId){
     commentStart=Date.now();
 
     document.getElementById('commentTimer').textContent='00:00';
+
     commentTimerInterval=setInterval(()=>{
       const timer=document.getElementById('commentTimer');
       if(timer)timer.textContent=formatTime((Date.now()-commentStart)/1000);
@@ -1032,6 +1140,7 @@ async function openAudioComment(postId){
       try{
         const data=await fileToDataURL(blob);
         post.comments=post.comments||[];
+
         post.comments.push({
           id:safeId(),
           name:profileName(),
@@ -1150,12 +1259,14 @@ async function startAudioReply(postId,commentId){
         const data=await fileToDataURL(blob);
         const currentPost=posts.find(p=>String(p.id)===String(postId));
         const currentParent=currentPost&&findCommentById(currentPost.comments,commentId);
+
         if(!currentPost||!currentParent){
           status.innerHTML='';
           return;
         }
 
         if(!Array.isArray(currentParent.children))currentParent.children=[];
+
         currentParent.children.push({
           id:safeId(),
           name:profileName(),
@@ -1211,6 +1322,7 @@ function votePoll(id,index){
   if(!post||!post.poll||post.poll.voted)return;
 
   if(index<0||index>1)return;
+
   post.poll.votes=post.poll.votes||[0,0];
   post.poll.votes[index]=(Number(post.poll.votes[index])||0)+1;
   post.poll.voted=true;
@@ -1240,6 +1352,7 @@ function showSaved(){
   if(!box)return;
 
   const items=posts.filter(p=>saved.has(String(p.id)));
+
   if(!items.length){
     box.innerHTML='<p class="empty">Aucun favori enregistré.</p>';
     return;
@@ -1247,9 +1360,15 @@ function showSaved(){
 
   box.innerHTML=items.map(p=>`
     <div class="reply">
-      <strong>${esc(p.name)}</strong>
+      <span class="comment-badge">★ FAVORI</span>
+      <div class="comment-head">
+        <strong>${esc(p.name)}</strong>
+      </div>
       <p>${esc(p.text||'Publication audio ou média')}</p>
-      <button type="button" class="blue full" onclick="navigate('home')">Voir le fil</button>
+      ${renderMedia(p.media)}
+      <div class="row">
+        <button type="button" class="blue" onclick="navigate('home')">Voir le fil</button>
+      </div>
     </div>`).join('');
 }
 
@@ -1266,6 +1385,7 @@ function editPost(id){
   if(text===null)return;
 
   post.text=text.trim();
+
   if(!persistPosts())return;
 
   addActivity('Une publication a été modifiée.');
@@ -1279,6 +1399,7 @@ function deletePost(id){
   if(!confirm('Supprimer cette publication et ses commentaires ?'))return;
 
   const removed=posts.splice(index,1)[0];
+
   if(!persistPosts()){
     posts.splice(index,0,removed);
     return;
@@ -1324,10 +1445,15 @@ function renderDiscover(){
 
   box.innerHTML=matches.length?matches.map(p=>`
     <div class="reply">
-      <strong>${esc(p.name)}</strong>
+      <span class="comment-badge">RÉSULTAT</span>
+      <div class="comment-head">
+        <strong>${esc(p.name)}</strong>
+      </div>
       <p>${esc(p.text||'Publication audio ou média')}</p>
       ${renderMedia(p.media)}
-      <button type="button" class="blue full" onclick="navigate('home')">Voir le fil d’actualité</button>
+      <div class="row">
+        <button type="button" class="blue" onclick="navigate('home')">Voir le fil d’actualité</button>
+      </div>
     </div>`).join(''):'<p class="empty">Aucun résultat.</p>';
 }
 
@@ -1439,9 +1565,6 @@ window.addEventListener('beforeinstallprompt',event=>{
 
 function registerServiceWorker(){
   if(!('serviceWorker' in navigator))return;
-
-  // Un véritable service worker nécessite un fichier séparé.
-  // Cette fonction n'effectue aucune installation réseau.
 }
 
 document.getElementById('discoverSearch').addEventListener('input',renderDiscover);
