@@ -326,10 +326,18 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
 }
 </style>
 <style id="junovabook-remarques">
-/* Remarque 1 : titre en bleu, petit message en blanc */
-.brand h1{color:#3b9bff}
-.brand p{color:#ffffff}
-/* Remarque 2 : MA VOIX JUNOVA sur deux lignes (le micro reste devant MA VOIX) */
+/* 1. Titre en bleu ciel */
+.brand h1{color:#38bdf8}
+
+/* 2. Message sous le titre : majuscules espacées, blanc, dans une pastille bleu ciel */
+.brand p{
+  display:inline-block;white-space:nowrap;margin:6px 0 0;
+  padding:5px 10px;border-radius:20px;background:#0ea5e9;color:#fff;
+  font-size:10.5px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;line-height:1.3;
+}
+@media(max-width:360px){.brand p{font-size:9.5px;letter-spacing:1.5px;padding:5px 8px}}
+
+/* MA VOIX JUNOVA sur deux lignes (le micro reste devant MA VOIX) */
 #expressionChoices .blue{
   white-space:nowrap !important;
   font-size:11px !important;
@@ -338,59 +346,114 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
   min-width:0;
 }
 
-/* Série 2 - remarque 1 : DIFFUSIONS (mot plus long) */
+/* Boutons DÉBATS et DIFFUSIONS */
 .actions button[onclick^="sharePost"]{white-space:nowrap}
 .actions button[onclick^="toggleComments"]{white-space:nowrap}
 
-/* Série 2 - remarques 3 et 5 : un seul cadre pour le commentaire, réponses sans cadre,
-   petit décalage à droite, jamais cumulé d'un niveau à l'autre */
+/* 3. Un seul cadre pour le commentaire (moins de vide) */
+body .reply:not(.is-reply){
+  position:relative;
+  padding:10px 12px 10px 14px !important;
+}
+body .reply:not(.is-reply) > .reply-children{
+  margin:8px 0 0 -6px !important;
+  padding:0 !important;
+  width:auto !important;
+  max-width:none !important;
+  gap:8px;
+}
+
+/* 4. Réponses : sans cadre, une petite barre violette par réponse,
+   le long de son propre contenu seulement, toutes alignées */
 body .reply.is-reply{
+  display:grid !important;
+  grid-template-columns:2px minmax(0,1fr);
+  column-gap:6px;
+  row-gap:0;
+  position:relative;
   background:transparent !important;
   border:0 !important;
-  border-left:2px solid var(--messages) !important;
   border-radius:0 !important;
   box-shadow:none !important;
-  padding:0 0 0 6px !important;
+  padding:0 !important;
   margin:0 !important;
   width:auto !important;
   max-width:100% !important;
 }
-body .reply.is-reply::before{display:none !important}
-body .reply:not(.is-reply) > .reply-children{
-  margin:12px 0 0 6px !important;
-  padding:0 !important;
-  width:auto !important;
-  max-width:none !important;
-  gap:12px;
+body .reply.is-reply > *{grid-column:2}
+body .reply.is-reply::before{
+  content:"" !important;
+  display:block !important;
+  position:static !important;
+  grid-column:1;
+  grid-row:1 / 40;
+  width:2px !important;
+  height:auto !important;
+  background:#7c3aed !important;
+  border-radius:1px;
 }
 body .reply.is-reply > .reply-children{
-  margin:12px 0 0 -8px !important;
+  grid-column:1 / -1;
+  grid-row:40;
+  margin:8px 0 0 0 !important;
   padding:0 !important;
   width:auto !important;
   max-width:none !important;
-  gap:12px;
+  gap:8px;
 }
 
-/* Série 2 - remarque 4 : lecteurs audio sans fond, même taille partout,
-   micro doré, triangle et barre en rose vif, durée en lavande */
-body .reply audio{
+/* 5. Date courte à droite de l'étiquette, sur la même ligne */
+body .reply > .comment-head small{
+  position:absolute;
+  top:0;right:0;
+  line-height:18px;
+  font-size:11px;
+  white-space:nowrap;
+}
+body .reply:not(.is-reply) > .comment-head small{top:10px;right:12px}
+@media(max-width:340px){body .reply > .comment-head small{font-size:10px}}
+
+/* 6. « Répondre » et « Réponse audio » côte à côte */
+body .reply .row{display:flex !important;flex-wrap:nowrap !important;gap:6px}
+body .reply .row button{
+  flex:1 1 0 !important;
+  min-width:0 !important;
+  width:auto !important;
+  margin-top:4px;
+  padding:8px 4px;
+  font-size:11px;
+  line-height:1.2;
+}
+
+/* 8. Moins de vides inutiles */
+body .reply .comment-badge{margin-bottom:4px}
+body .reply .comment-head{margin-bottom:2px}
+body .reply p{margin:2px 0 4px}
+
+/* 7 et 2bis. Lecteurs audio : même style partout (commentaires, réponses, publications) */
+body .reply audio,body .post audio{
   display:block !important;
   box-sizing:content-box !important;
-  width:176px !important;
+  width:190px !important;
   max-width:none !important;
-  height:40px !important;
-  padding-left:30px !important;
-  margin:8px 0 !important;
+  height:32px !important;
+  padding:0 !important;
+  margin:2px 0 4px !important;
   border-radius:0 !important;
-  background:transparent url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fbbf24' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='2' width='6' height='12' rx='3'/%3E%3Cpath d='M5 11a7 7 0 0 0 14 0'/%3E%3Cpath d='M12 18v4'/%3E%3C/svg%3E") no-repeat 2px center/22px 22px !important;
+  background:transparent !important;
+  clip-path:inset(0 36px 0 0);
 }
-body .reply audio::-webkit-media-controls-enclosure{background:transparent !important;border-radius:0 !important}
-body .reply audio::-webkit-media-controls-panel{background-color:transparent !important}
-body .reply audio::-webkit-media-controls-play-button{filter:invert(1) sepia(.47) saturate(8.73) hue-rotate(279deg) brightness(.79)}
-body .reply audio::-webkit-media-controls-timeline{max-width:80px !important;filter:invert(1) sepia(.47) saturate(8.73) hue-rotate(279deg) brightness(.79)}
-body .reply audio::-webkit-media-controls-current-time-display,
-body .reply audio::-webkit-media-controls-time-remaining-display{color:#e5d4ff !important}
-body .reply audio::-webkit-media-controls-overflow-button{display:none !important}
+body .reply audio::-webkit-media-controls-enclosure,body .post audio::-webkit-media-controls-enclosure{background:transparent !important;border-radius:0 !important}
+body .reply audio::-webkit-media-controls-panel,body .post audio::-webkit-media-controls-panel{background-color:transparent !important}
+body .reply audio::-webkit-media-controls-play-button,body .post audio::-webkit-media-controls-play-button{filter:invert(1) sepia(.47) saturate(8.73) hue-rotate(279deg) brightness(.79) !important}
+body .reply audio::-webkit-media-controls-timeline,body .post audio::-webkit-media-controls-timeline{max-width:70px !important;filter:invert(1) sepia(.47) saturate(8.73) hue-rotate(279deg) brightness(.79) !important}
+body .reply audio::-webkit-media-controls-current-time-display,body .post audio::-webkit-media-controls-current-time-display,
+body .reply audio::-webkit-media-controls-time-remaining-display,body .post audio::-webkit-media-controls-time-remaining-display{color:#e5d4ff !important}
+body .reply audio::-webkit-media-controls-overflow-button,body .post audio::-webkit-media-controls-overflow-button{display:none !important}
+
+/* 3bis. Contour bleu ciel dans les champs de saisie */
+input:focus,textarea:focus,select:focus{border-color:#38bdf8}
+input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #38bdf8;outline-offset:2px}
 </style>
 </head>
 <body>
@@ -1044,6 +1107,12 @@ function findCommentById(comments,id){
   return null;
 }
 
+function shortDate(value){
+  const text=String(value||'');
+  const m=text.match(/^(\d{1,2})\/(\d{1,2})\/\d{2,4}[,\s]+(\d{1,2}:\d{2})/);
+  return m?`${m[1]}/${m[2]} · ${m[3]}`:text;
+}
+
 function countAllReplies(list){
   if(!Array.isArray(list))return 0;
   return list.reduce((total,c)=>total+1+countAllReplies(c&&c.children),0);
@@ -1062,7 +1131,7 @@ function commentNode(post,comment,depth=0){
       <span class="comment-badge">${badge}${audioBadge}</span>
       <div class="comment-head">
         <strong>${esc(comment.name||'Membre JUNOVABOOK')}</strong>
-        <small>${esc(comment.date||'')}</small>
+        <small>${esc(shortDate(comment.date))}</small>
       </div>
 
       ${comment.text?`<p>${esc(comment.text)}</p>`:''}
@@ -1108,7 +1177,7 @@ function renderFeed(){
     card.innerHTML=`
       <div class="row" style="align-items:center;justify-content:space-between">
         <strong>${esc(post.name||'Membre JUNOVABOOK')}</strong>
-        <small>${esc(post.date?new Date(post.date).toLocaleString():'')}</small>
+        <small>${esc(post.date?shortDate(new Date(post.date).toLocaleString()):'')}</small>
       </div>
 
       ${post.type==='debat'?'<span class="pill">🗣️ DÉBAT</span>':''}
