@@ -337,6 +337,60 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
   padding-right:2px !important;
   min-width:0;
 }
+
+/* Série 2 - remarque 1 : DIFFUSIONS (mot plus long) */
+.actions button[onclick^="sharePost"]{white-space:nowrap}
+.actions button[onclick^="toggleComments"]{white-space:nowrap}
+
+/* Série 2 - remarques 3 et 5 : un seul cadre pour le commentaire, réponses sans cadre,
+   petit décalage à droite, jamais cumulé d'un niveau à l'autre */
+body .reply.is-reply{
+  background:transparent !important;
+  border:0 !important;
+  border-left:2px solid var(--messages) !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  padding:0 0 0 6px !important;
+  margin:0 !important;
+  width:auto !important;
+  max-width:100% !important;
+}
+body .reply.is-reply::before{display:none !important}
+body .reply:not(.is-reply) > .reply-children{
+  margin:12px 0 0 6px !important;
+  padding:0 !important;
+  width:auto !important;
+  max-width:none !important;
+  gap:12px;
+}
+body .reply.is-reply > .reply-children{
+  margin:12px 0 0 -8px !important;
+  padding:0 !important;
+  width:auto !important;
+  max-width:none !important;
+  gap:12px;
+}
+
+/* Série 2 - remarque 4 : lecteurs audio sans fond, même taille partout,
+   micro doré, triangle et barre en rose vif, durée en lavande */
+body .reply audio{
+  display:block !important;
+  box-sizing:content-box !important;
+  width:176px !important;
+  max-width:none !important;
+  height:40px !important;
+  padding-left:30px !important;
+  margin:8px 0 !important;
+  border-radius:0 !important;
+  background:transparent url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fbbf24' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='2' width='6' height='12' rx='3'/%3E%3Cpath d='M5 11a7 7 0 0 0 14 0'/%3E%3Cpath d='M12 18v4'/%3E%3C/svg%3E") no-repeat 2px center/22px 22px !important;
+}
+body .reply audio::-webkit-media-controls-enclosure{background:transparent !important;border-radius:0 !important}
+body .reply audio::-webkit-media-controls-panel{background-color:transparent !important}
+body .reply audio::-webkit-media-controls-play-button{filter:invert(1) sepia(.47) saturate(8.73) hue-rotate(279deg) brightness(.79)}
+body .reply audio::-webkit-media-controls-timeline{max-width:80px !important;filter:invert(1) sepia(.47) saturate(8.73) hue-rotate(279deg) brightness(.79)}
+body .reply audio::-webkit-media-controls-current-time-display,
+body .reply audio::-webkit-media-controls-time-remaining-display{color:#e5d4ff !important}
+body .reply audio::-webkit-media-controls-overflow-button{display:none !important}
 </style>
 </head>
 <body>
@@ -990,6 +1044,11 @@ function findCommentById(comments,id){
   return null;
 }
 
+function countAllReplies(list){
+  if(!Array.isArray(list))return 0;
+  return list.reduce((total,c)=>total+1+countAllReplies(c&&c.children),0);
+}
+
 function commentNode(post,comment,depth=0){
   const children=Array.isArray(comment.children)?comment.children:[];
   const media=Array.isArray(comment.media)?comment.media:[];
@@ -1075,10 +1134,10 @@ function renderFeed(){
           onclick="lovePost('${esc(post.id)}')">❤️ ${Number(post.loves)||0} LOVES</button>
 
         <button type="button" style="background:#245fbd"
-          onclick="toggleComments('${esc(post.id)}')">💬 DÉBATTRE (${comments.length})</button>
+          onclick="toggleComments('${esc(post.id)}')">DÉBATS ${countAllReplies(comments)}</button>
 
         <button type="button" style="background:#16815f"
-          onclick="sharePost('${esc(post.id)}')">↗ DIFFUSER</button>
+          onclick="sharePost('${esc(post.id)}')">DIFFUSIONS</button>
       </div>
 
       <div class="row">
