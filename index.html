@@ -456,6 +456,34 @@ body .novas-stem{width:30px;height:36px;border-radius:0 0 8px 8px}
 body .novas-heart{font-size:22px}
 body .novas-number{font-size:9px}
 
+
+/* Photo de profil : petits ronds à côté du nom */
+.avatar{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;flex:0 0 26px;border-radius:50%;overflow:hidden;background:#7c3aed;color:#fff;font-size:13px;font-weight:bold;margin-right:7px;vertical-align:middle}
+body .avatar img{width:100% !important;height:100% !important;max-width:none !important;margin:0 !important;border-radius:0 !important;object-fit:cover;display:block}
+strong.who{display:inline-flex;align-items:center}
+body .post strong.who .avatar{width:32px;height:32px;flex-basis:32px;font-size:15px}
+body .reply .comment-head strong{display:inline-flex;align-items:center}
+body .reply .avatar{width:24px;height:24px;flex-basis:24px;font-size:12px;margin-right:6px}
+.profile-photo{margin:6px 0}
+body .profile-photo .avatar{width:72px;height:72px;flex-basis:72px;font-size:30px;margin:0}
+
+/* Notifications JUNOVAS : photo, nom, texte, date courte */
+.activity-row{display:flex;gap:10px;align-items:flex-start}
+body .activity-row .avatar{width:36px;height:36px;flex-basis:36px;font-size:16px;margin:0}
+.activity-body{min-width:0}
+.activity-body strong{display:block;font-size:14px}
+.activity-body span{display:block;color:#e5d4ff;font-size:14px}
+.activity-body small{display:block;color:#c9bde5;font-size:11px;margin-top:2px}
+.activity.unread .activity-body strong::before{content:"● ";color:#ff4fc3}
+
+/* Compteur JUNOVAS : pastille rose sur le bouton du bas */
+.bottom button{position:relative}
+.count-badge{position:absolute;top:1px;right:3px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#ff4fc3;color:#fff;font-size:11px;line-height:17px;font-weight:bold;text-align:center}
+.count-badge[hidden]{display:none}
+
+/* Choix de l'extrait audio */
+#voiceTrimStart{width:100%;margin:8px 0}
+
 /* 3bis. Contour bleu ciel dans les champs de saisie */
 input:focus,textarea:focus,select:focus{border-color:#38bdf8}
 input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #38bdf8;outline-offset:2px}
@@ -498,7 +526,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px soli
     <textarea id="postText" maxlength="5000" placeholder="Exprime tes idées ici..."></textarea>
     <label for="postMedia">Ajouter jusqu'à 4 photos ou une vidéo</label>
     <input id="postMedia" type="file" accept="image/*,video/*" multiple>
-    <p class="file-note">Choisis une vidéo ou jusqu’à quatre photos. Les limites audio sont différentes : 0,5 Mo pour un enregistrement au micro et 2,5 Mo pour un fichier audio importé.</p>
+    <p class="file-note">Choisis une vidéo ou jusqu’à quatre photos. Les photos de plus de 2,5 Mo sont réduites automatiquement. Audio : 0,5 Mo pour un enregistrement au micro ; un fichier audio importé peut aller jusqu’à 5 Mo, et au-delà de 2,5 Mo tu choisis la partie à garder.</p>
     <div id="mediaPendingPreview" class="preview-grid"></div>
     <div id="pollFields" class="hidden">
       <label for="optionA">Premier choix</label><input id="optionA" maxlength="100" placeholder="POUR">
@@ -525,6 +553,14 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px soli
       <span class="recording-time" id="voiceTimer">00:00</span>
       <div class="waveform" id="voiceWave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
       <strong>En cours…</strong>
+    </div>
+    <div id="voiceTrimBox" class="audio-box hidden">
+      <p id="voiceTrimStatus" class="notice"></p>
+      <div id="voiceTrimControls" class="hidden">
+        <input id="voiceTrimStart" type="range" min="0" max="0" value="0" step="1" oninput="updateVoiceTrimLabel()">
+        <p id="voiceTrimLabel" class="notice"></p>
+        <button class="green full" onclick="validateVoiceTrim()">Valider l'extrait</button>
+      </div>
     </div>
     <div id="voicePreview" class="audio-box hidden"></div>
     <div class="row">
@@ -575,6 +611,13 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px soli
   <label for="displayName">Nom affiché</label>
   <input id="displayName" maxlength="60" placeholder="Ton nom ou pseudonyme">
   <button class="pink full" onclick="saveProfile()">Enregistrer le nom</button>
+
+  <hr><h3>Photo de profil</h3>
+  <div id="profilePhotoPreview" class="profile-photo"></div>
+  <label for="profilePhoto">Choisir ma photo</label>
+  <input id="profilePhoto" type="file" accept="image/*" onchange="chooseProfilePhoto(this)">
+  <button class="full" onclick="removeProfilePhoto()">Retirer ma photo</button>
+  <p class="notice">La photo est enregistrée sur cet appareil avec ton nom affiché. Si tu changes de nom, choisis-la de nouveau.</p>
 
   <hr><h3>PARAMÈTRES → APPARENCE</h3>
   <label for="accentColor">Couleur des LOVES</label><input id="accentColor" type="color" value="#ed4dba">
@@ -726,13 +769,14 @@ function updateBalances(){
 }
 
 function addActivity(text){
-  activities.unshift({id:safeId(),text,time:new Date().toLocaleString(),read:false});
+  activities.unshift({id:safeId(),name:profileName(),text,time:new Date().toLocaleString(),read:false});
   activities=activities.slice(0,100);
   saveJSON(ACTIVITY_STORE,activities);
   renderActivities();
 }
 
 function renderActivities(){
+  updateJunovasCounter();
   const el=document.getElementById('activityList');
   if(!el)return;
   el.innerHTML='';
@@ -744,8 +788,25 @@ function renderActivities(){
 
   activities.forEach(a=>{
     const div=document.createElement('div');
-    div.className='activity';
-    div.textContent=(a.read?'':'🔔 ')+a.text+' — '+a.time;
+    div.className='activity'+(a.read?'':' unread');
+    if(a.name){
+      const row=document.createElement('div');
+      row.className='activity-row';
+      row.innerHTML=avatarHTML(a.name);
+      const body=document.createElement('div');
+      body.className='activity-body';
+      const who=document.createElement('strong');
+      who.textContent=a.name;
+      const what=document.createElement('span');
+      what.textContent=a.text;
+      const when=document.createElement('small');
+      when.textContent=shortDate(a.time);
+      body.append(who,what,when);
+      row.appendChild(body);
+      div.appendChild(row);
+    }else{
+      div.textContent=(a.read?'':'🔔 ')+a.text+' — '+a.time;
+    }
     el.appendChild(div);
   });
 }
@@ -824,13 +885,57 @@ document.getElementById('postMedia').addEventListener('change',async function(){
     return;
   }
 
-  for(const file of files){
+  let shownFiles=files;
+  let shrunk=0,failed=0;
+  const tooBig=f=>f.type.startsWith('image/')&&f.type!=='image/gif'&&f.size>2.5*1024*1024;
+
+  if(files.some(tooBig)){
+    preview.innerHTML='<p class="notice" style="grid-column:1/-1">Réduction de la photo…</p>';
+    const adjusted=[];
+    for(const f of files){
+      if(tooBig(f)){
+        try{
+          adjusted.push(await shrinkImageFile(f,2500000));
+          shrunk++;
+        }catch(e){
+          adjusted.push(f);
+          failed++;
+        }
+      }else{
+        adjusted.push(f);
+      }
+    }
+    if(shrunk){
+      const dt=new DataTransfer();
+      adjusted.forEach(f=>dt.items.add(f));
+      this.files=dt.files;
+    }
+    shownFiles=adjusted;
+    preview.innerHTML='';
+  }
+
+  for(const file of shownFiles){
     if(file.type.startsWith('image/')){
       const img=document.createElement('img');
       img.alt='Aperçu de la photo';
       img.src=URL.createObjectURL(file);
       preview.appendChild(img);
     }
+  }
+
+  if(shrunk){
+    const note=document.createElement('p');
+    note.className='notice';
+    note.style.gridColumn='1/-1';
+    note.textContent=shrunk>1?'Photos réduites pour tenir dans 2,5 Mo.':'Photo réduite pour tenir dans 2,5 Mo.';
+    preview.appendChild(note);
+  }
+  if(failed){
+    const note=document.createElement('p');
+    note.className='notice';
+    note.style.gridColumn='1/-1';
+    note.textContent='Impossible de réduire une photo : elle dépasse 2,5 Mo.';
+    preview.appendChild(note);
   }
 });
 
@@ -907,6 +1012,7 @@ function openVoiceComposer(){
 }
 
 function cancelVoiceComposer(){
+  hideVoiceTrim();
   stopVoiceRecording();
   voiceBlob=null;
   document.getElementById('voiceFile').value='';
@@ -1004,11 +1110,13 @@ function showVoicePreview(blob){
   const file=this.files[0];
   if(!file)return;
 
+  hideVoiceTrim();
+
   if(file.size>2.5*1024*1024){
-    alert('Le fichier audio dépasse 2,5 Mo.');
-    this.value='';
     voiceBlob=null;
     document.getElementById('publishVoiceBtn').disabled=true;
+    document.getElementById('voicePreview').classList.add('hidden');
+    startVoiceTrim(file,this);
     return;
   }
 
@@ -1111,6 +1219,267 @@ function findCommentById(comments,id){
   }
 
   return null;
+}
+
+/* ===== Photo de profil (enregistrée sur cet appareil, par nom affiché) ===== */
+function avatarStoreKey(){return 'junovabook_avatars';}
+
+function loadAvatars(){
+  try{
+    const value=JSON.parse(localStorage.getItem(avatarStoreKey())||'{}');
+    return value&&typeof value==='object'?value:{};
+  }catch(e){
+    return {};
+  }
+}
+
+function avatarFor(name){
+  const photo=loadAvatars()[String(name||'')];
+  return typeof photo==='string'&&photo.indexOf('data:image/')===0?photo:'';
+}
+
+function avatarHTML(name){
+  const label=String(name||'Membre JUNOVABOOK');
+  const photo=avatarFor(label);
+  if(photo)return '<span class="avatar"><img src="'+esc(photo)+'" alt=""></span>';
+  const letter=(label.trim().charAt(0)||'M').toUpperCase();
+  return '<span class="avatar">'+esc(letter)+'</span>';
+}
+
+function renderProfilePhoto(){
+  const box=document.getElementById('profilePhotoPreview');
+  if(box)box.innerHTML=avatarHTML(profileName());
+}
+
+function loadImageElement(file){
+  return new Promise(function(resolve,reject){
+    const url=URL.createObjectURL(file);
+    const img=new Image();
+    img.onload=function(){URL.revokeObjectURL(url);resolve(img);};
+    img.onerror=function(){URL.revokeObjectURL(url);reject(new Error('image'));};
+    img.src=url;
+  });
+}
+
+async function squareThumbnail(file,size){
+  const img=await loadImageElement(file);
+  const side=Math.min(img.naturalWidth,img.naturalHeight);
+  const sx=(img.naturalWidth-side)/2;
+  const sy=(img.naturalHeight-side)/2;
+  const canvas=document.createElement('canvas');
+  canvas.width=size;
+  canvas.height=size;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(0,0,size,size);
+  ctx.drawImage(img,sx,sy,side,side,0,0,size,size);
+  return canvas.toDataURL('image/jpeg',0.82);
+}
+
+async function chooseProfilePhoto(input){
+  const file=input.files&&input.files[0];
+  if(!file)return;
+  if(!file.type.startsWith('image/')){
+    alert('Choisis une image.');
+    input.value='';
+    return;
+  }
+  if(file.size>10*1024*1024){
+    alert('Cette photo dépasse 10 Mo. Choisis-en une plus légère.');
+    input.value='';
+    return;
+  }
+  try{
+    const dataUrl=await squareThumbnail(file,96);
+    const photos=loadAvatars();
+    photos[profileName()]=dataUrl;
+    localStorage.setItem(avatarStoreKey(),JSON.stringify(photos));
+    renderProfilePhoto();
+    renderFeed();
+    addActivity('Ta photo de profil a été enregistrée.');
+    alert('Photo enregistrée sur cet appareil.');
+  }catch(e){
+    alert('Impossible de lire cette photo. Essaie une autre image.');
+  }
+  input.value='';
+}
+
+function removeProfilePhoto(){
+  const photos=loadAvatars();
+  delete photos[profileName()];
+  try{localStorage.setItem(avatarStoreKey(),JSON.stringify(photos));}catch(e){}
+  renderProfilePhoto();
+  renderFeed();
+  renderActivities();
+}
+
+/* ===== Réduction automatique des photos de plus de 2,5 Mo ===== */
+async function shrinkImageFile(file,limit){
+  const img=await loadImageElement(file);
+  let scale=Math.min(1,2048/Math.max(img.naturalWidth,img.naturalHeight));
+  let quality=0.85;
+  for(let attempt=0;attempt<14;attempt++){
+    const w=Math.max(1,Math.round(img.naturalWidth*scale));
+    const h=Math.max(1,Math.round(img.naturalHeight*scale));
+    const canvas=document.createElement('canvas');
+    canvas.width=w;
+    canvas.height=h;
+    const ctx=canvas.getContext('2d');
+    ctx.fillStyle='#ffffff';
+    ctx.fillRect(0,0,w,h);
+    ctx.drawImage(img,0,0,w,h);
+    const blob=await new Promise(function(resolve){canvas.toBlob(resolve,'image/jpeg',quality);});
+    if(blob&&blob.size<=limit){
+      const base=(file.name||'photo').replace(/\.[^.]+$/,'');
+      return new File([blob],base+'.jpg',{type:'image/jpeg'});
+    }
+    if(quality>0.6){quality-=0.1;}else{scale*=0.8;}
+  }
+  throw new Error('trop lourd');
+}
+
+/* ===== Audio importé de 2,5 à 5 Mo : choix de l'extrait à garder ===== */
+var voiceTrimState=null;
+
+function fmtDuration(seconds){
+  const total=Math.max(0,Math.round(seconds));
+  const m=Math.floor(total/60),r=total%60;
+  return m+':'+(r<10?'0':'')+r;
+}
+
+function wavBlobFromSamples(samples,rate){
+  const buffer=new ArrayBuffer(44+samples.length*2);
+  const view=new DataView(buffer);
+  function writeText(offset,text){
+    for(let i=0;i<text.length;i++)view.setUint8(offset+i,text.charCodeAt(i));
+  }
+  writeText(0,'RIFF');
+  view.setUint32(4,36+samples.length*2,true);
+  writeText(8,'WAVE');
+  writeText(12,'fmt ');
+  view.setUint32(16,16,true);
+  view.setUint16(20,1,true);
+  view.setUint16(22,1,true);
+  view.setUint32(24,rate,true);
+  view.setUint32(28,rate*2,true);
+  view.setUint16(32,2,true);
+  view.setUint16(34,16,true);
+  writeText(36,'data');
+  view.setUint32(40,samples.length*2,true);
+  let offset=44;
+  for(let i=0;i<samples.length;i++){
+    const v=Math.max(-1,Math.min(1,samples[i]));
+    view.setInt16(offset,v<0?v*0x8000:v*0x7FFF,true);
+    offset+=2;
+  }
+  return new Blob([buffer],{type:'audio/wav'});
+}
+
+async function decodeToMono(file){
+  const Ctx=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+  if(!Ctx)throw new Error('non supporté');
+  const context=new Ctx(1,1,16000);
+  const decoded=await context.decodeAudioData(await file.arrayBuffer());
+  const length=decoded.length;
+  const channels=decoded.numberOfChannels;
+  const mono=new Float32Array(length);
+  for(let c=0;c<channels;c++){
+    const data=decoded.getChannelData(c);
+    for(let i=0;i<length;i++)mono[i]+=data[i]/channels;
+  }
+  return {samples:mono,rate:decoded.sampleRate};
+}
+
+function hideVoiceTrim(){
+  voiceTrimState=null;
+  const box=document.getElementById('voiceTrimBox');
+  if(box)box.classList.add('hidden');
+}
+
+function updateVoiceTrimLabel(){
+  const s=voiceTrimState;
+  if(!s||!s.keep)return;
+  const start=Number(document.getElementById('voiceTrimStart').value)||0;
+  const end=Math.min(s.total,start+s.keep);
+  document.getElementById('voiceTrimLabel').textContent='Extrait gardé : de '+fmtDuration(start)+' à '+fmtDuration(end);
+}
+
+async function startVoiceTrim(file,input){
+  hideVoiceTrim();
+  if(file.size>5*1024*1024){
+    alert('Ce fichier audio dépasse 5 Mo. Choisis un fichier plus léger.');
+    input.value='';
+    return;
+  }
+  const box=document.getElementById('voiceTrimBox');
+  const status=document.getElementById('voiceTrimStatus');
+  const controls=document.getElementById('voiceTrimControls');
+  box.classList.remove('hidden');
+  controls.classList.add('hidden');
+  status.textContent='Préparation de l’audio…';
+  try{
+    const decoded=await decodeToMono(file);
+    const maxSamples=Math.floor((2500000-44)/2);
+    voiceTrimState={samples:decoded.samples,rate:decoded.rate,maxSamples:maxSamples,input:input,keep:0,total:decoded.samples.length/decoded.rate};
+    if(decoded.samples.length<=maxSamples){
+      applyVoiceTrim(true);
+      return;
+    }
+    const keep=Math.floor(maxSamples/decoded.rate);
+    voiceTrimState.keep=keep;
+    const range=document.getElementById('voiceTrimStart');
+    range.min=0;
+    range.max=Math.max(0,Math.floor(voiceTrimState.total-keep));
+    range.step=1;
+    range.value=0;
+    status.textContent='Ton audio dure '+fmtDuration(voiceTrimState.total)+'. Choisis la partie à garder ('+keep+' secondes au maximum).';
+    controls.classList.remove('hidden');
+    updateVoiceTrimLabel();
+  }catch(e){
+    box.classList.add('hidden');
+    input.value='';
+    alert('Impossible de lire ou de couper ce fichier audio. Essaie un autre fichier.');
+  }
+}
+
+function validateVoiceTrim(){
+  applyVoiceTrim(false);
+}
+
+function applyVoiceTrim(whole){
+  const s=voiceTrimState;
+  if(!s)return;
+  const from=whole?0:Math.floor((Number(document.getElementById('voiceTrimStart').value)||0)*s.rate);
+  const to=whole?s.samples.length:Math.min(s.samples.length,from+s.maxSamples);
+  const slice=s.samples.subarray(from,to);
+  const trimmed=new File([wavBlobFromSamples(slice,s.rate)],'voix-junova.wav',{type:'audio/wav'});
+  const transfer=new DataTransfer();
+  transfer.items.add(trimmed);
+  s.input.files=transfer.files;
+  voiceBlob=trimmed;
+  showVoicePreview(trimmed);
+  document.getElementById('publishVoiceBtn').disabled=false;
+  document.getElementById('voiceTrimControls').classList.add('hidden');
+  document.getElementById('voiceTrimStatus').textContent=whole
+    ?'Audio converti pour tenir dans 2,5 Mo ('+fmtDuration(slice.length/s.rate)+').'
+    :'Extrait prêt : '+fmtDuration(slice.length/s.rate)+' gardées (de '+fmtDuration(from/s.rate)+' à '+fmtDuration(to/s.rate)+').';
+  voiceTrimState=null;
+}
+
+/* ===== Compteur JUNOVAS (notifications non lues) ===== */
+function updateJunovasCounter(){
+  const list=Array.isArray(activities)?activities:[];
+  const unread=list.filter(function(a){return !a.read;}).length;
+  const button=document.querySelector('.bottom button[onclick*="junovas"]');
+  if(!button)return;
+  let badge=button.querySelector('.count-badge');
+  if(!badge){
+    badge=document.createElement('span');
+    badge.className='count-badge';
+    button.appendChild(badge);
+  }
+  badge.textContent=unread>99?'99+':String(unread);
+  badge.hidden=unread===0;
 }
 
 /* ===== Lecteur audio maison (affichage seulement) ===== */
@@ -1243,7 +1612,7 @@ function commentNode(post,comment,depth=0){
     <div class="reply ${isReply?'is-reply':''}" id="comment-${esc(comment.id)}">
       <span class="comment-badge">${badge}${audioBadge}</span>
       <div class="comment-head">
-        <strong>${esc(comment.name||'Membre JUNOVABOOK')}</strong>
+        <strong class="who">${avatarHTML(comment.name||'Membre JUNOVABOOK')}${esc(comment.name||'Membre JUNOVABOOK')}</strong>
         <small>${esc(shortDate(comment.date))}</small>
       </div>
 
@@ -1289,7 +1658,7 @@ function renderFeed(){
 
     card.innerHTML=`
       <div class="row" style="align-items:center;justify-content:space-between">
-        <strong>${esc(post.name||'Membre JUNOVABOOK')}</strong>
+        <strong class="who">${avatarHTML(post.name||'Membre JUNOVABOOK')}${esc(post.name||'Membre JUNOVABOOK')}</strong>
         <small>${esc(post.date?shortDate(new Date(post.date).toLocaleString()):'')}</small>
       </div>
 
@@ -1890,12 +2259,14 @@ function saveProfile(){
   }
 
   localStorage.setItem(PROFILE_STORE,name);
+  renderProfilePhoto();
   addActivity('Ton nom de profil a été enregistré.');
   alert('Nom enregistré sur cet appareil.');
 }
 
 function loadProfile(){
   document.getElementById('displayName').value=localStorage.getItem(PROFILE_STORE)||'';
+  renderProfilePhoto();
 }
 
 function applyColors(){
