@@ -430,26 +430,31 @@ body .reply .comment-badge{margin-bottom:4px}
 body .reply .comment-head{margin-bottom:2px}
 body .reply p{margin:2px 0 4px}
 
-/* 7 et 2bis. Lecteurs audio : même style partout (commentaires, réponses, publications) */
-body .reply audio,body .post audio{
-  display:block !important;
-  box-sizing:content-box !important;
-  width:190px !important;
-  max-width:none !important;
-  height:32px !important;
-  padding:0 !important;
-  margin:2px 0 4px !important;
-  border-radius:0 !important;
-  background:transparent !important;
-  clip-path:inset(0 36px 0 0);
+/* Lecteur audio maison : triangle doré, durée lavande, barre rose */
+.jb-audio{display:flex;align-items:center;gap:10px;height:46px;width:100%;max-width:260px;margin:2px 0 4px}
+.jb-audio audio{display:none !important}
+.jb-play{
+  width:44px !important;height:44px !important;flex:0 0 44px;
+  padding:0 !important;margin:0 !important;border:0 !important;border-radius:50% !important;
+  background:transparent !important;box-shadow:none !important;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
 }
-body .reply audio::-webkit-media-controls-enclosure,body .post audio::-webkit-media-controls-enclosure{background:transparent !important;border-radius:0 !important}
-body .reply audio::-webkit-media-controls-panel,body .post audio::-webkit-media-controls-panel{background-color:transparent !important}
-body .reply audio::-webkit-media-controls-play-button,body .post audio::-webkit-media-controls-play-button{filter:invert(1) sepia(.47) saturate(8.73) hue-rotate(279deg) brightness(.79) !important}
-body .reply audio::-webkit-media-controls-timeline,body .post audio::-webkit-media-controls-timeline{max-width:70px !important;filter:invert(1) sepia(.47) saturate(8.73) hue-rotate(279deg) brightness(.79) !important}
-body .reply audio::-webkit-media-controls-current-time-display,body .post audio::-webkit-media-controls-current-time-display,
-body .reply audio::-webkit-media-controls-time-remaining-display,body .post audio::-webkit-media-controls-time-remaining-display{color:#e5d4ff !important}
-body .reply audio::-webkit-media-controls-overflow-button,body .post audio::-webkit-media-controls-overflow-button{display:none !important}
+.jb-time{font-size:14px;color:#e5d4ff;min-width:34px;font-variant-numeric:tabular-nums}
+.jb-track{position:relative;flex:1 1 auto;min-width:50px;max-width:140px;height:28px;cursor:pointer;display:flex;align-items:center}
+.jb-rail{position:absolute;left:0;right:0;height:4px;border-radius:4px;background:#574471}
+.jb-fill{position:absolute;left:0;height:4px;border-radius:4px;background:#ff4fc3;width:0}
+.jb-dot{position:absolute;top:50%;left:0;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#ff4fc3}
+
+/* Marges des publications resserrées */
+body .post{padding:11px 12px;margin-bottom:8px}
+
+/* En-tête plus compact et badge NOVAS plus petit (même forme, mêmes couleurs) */
+body header{padding:10px 14px}
+body .novas-logo{width:64px;font-size:11px}
+body .novas-top{padding:6px;border-radius:8px 8px 0 0}
+body .novas-stem{width:30px;height:36px;border-radius:0 0 8px 8px}
+body .novas-heart{font-size:22px}
+body .novas-number{font-size:9px}
 
 /* 3bis. Contour bleu ciel dans les champs de saisie */
 input:focus,textarea:focus,select:focus{border-color:#38bdf8}
@@ -529,10 +534,6 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px soli
     <p class="notice">Le microphone nécessite l'autorisation du navigateur. Les données restent sur cet appareil.</p>
   </section>
 
-  <div class="panel">
-    <h2>🌍 Fil d'actualité</h2>
-    <small>Publications enregistrées sur cet appareil.</small>
-  </div>
   <div id="feed"></div>
 </section>
 
@@ -1076,7 +1077,12 @@ function mediaHTML(media){
   if(!media)return '';
 
   if(media.type==='audio'){
-    return `<audio controls preload="metadata" src="${esc(media.data)}"></audio>`;
+    return `<div class="jb-audio">
+      <button type="button" class="jb-play" aria-label="Lecture ou pause"><svg class="jb-ico" viewBox="0 0 24 24" width="36" height="36" aria-hidden="true"><polygon points="5,1 22,12 5,23" fill="#fbbf24"></polygon></svg></button>
+      <span class="jb-time">0:00</span>
+      <div class="jb-track" role="slider" aria-label="Position de lecture" tabindex="0"><div class="jb-rail"></div><div class="jb-fill"></div><div class="jb-dot"></div></div>
+      <audio preload="metadata" src="${esc(media.data)}"></audio>
+    </div>`;
   }
 
   if(media.type==='video'){
@@ -1106,6 +1112,113 @@ function findCommentById(comments,id){
 
   return null;
 }
+
+/* ===== Lecteur audio maison (affichage seulement) ===== */
+(function(){
+  const PLAY='<polygon points="5,1 22,12 5,23" fill="#fbbf24"></polygon>';
+  const PAUSE='<rect x="4" y="2" width="6" height="20" rx="1.5" fill="#fbbf24"></rect><rect x="14" y="2" width="6" height="20" rx="1.5" fill="#fbbf24"></rect>';
+
+  function fmt(seconds){
+    if(!isFinite(seconds)||seconds<0)seconds=0;
+    const m=Math.floor(seconds/60),r=Math.floor(seconds%60);
+    return m+':'+(r<10?'0':'')+r;
+  }
+
+  function draw(box){
+    const audio=box.querySelector('audio');
+    if(!audio)return;
+    const duration=isFinite(audio.duration)&&audio.duration>0?audio.duration:0;
+    const ratio=duration?Math.min(1,audio.currentTime/duration):0;
+    box.querySelector('.jb-fill').style.width=(ratio*100)+'%';
+    box.querySelector('.jb-dot').style.left=(ratio*100)+'%';
+    box.querySelector('.jb-time').textContent=fmt(audio.currentTime);
+    box.querySelector('.jb-ico').innerHTML=audio.paused?PLAY:PAUSE;
+  }
+
+  function boxOf(target){
+    return target&&target.closest?target.closest('.jb-audio'):null;
+  }
+
+  function seekFromX(box,clientX){
+    const audio=box.querySelector('audio');
+    const rect=box.querySelector('.jb-track').getBoundingClientRect();
+    if(!audio||!rect.width)return;
+    const duration=audio.duration;
+    if(!isFinite(duration)||duration<=0)return;
+    const ratio=Math.max(0,Math.min(1,(clientX-rect.left)/rect.width));
+    audio.currentTime=ratio*duration;
+    draw(box);
+  }
+
+  document.addEventListener('click',function(event){
+    const button=event.target.closest?event.target.closest('.jb-play'):null;
+    if(button){
+      const audio=button.closest('.jb-audio').querySelector('audio');
+      if(audio.paused){
+        const result=audio.play();
+        if(result&&result.catch)result.catch(function(){});
+      }else{
+        audio.pause();
+      }
+      return;
+    }
+    const track=event.target.closest?event.target.closest('.jb-track'):null;
+    if(track){
+      seekFromX(track.closest('.jb-audio'),event.clientX);
+    }
+  });
+
+  document.addEventListener('keydown',function(event){
+    const track=event.target.closest?event.target.closest('.jb-track'):null;
+    if(!track||(event.key!=='ArrowLeft'&&event.key!=='ArrowRight'))return;
+    const box=track.closest('.jb-audio');
+    const audio=box.querySelector('audio');
+    audio.currentTime=Math.max(0,audio.currentTime+(event.key==='ArrowRight'?5:-5));
+    draw(box);
+    event.preventDefault();
+  });
+
+  ['timeupdate','pause','durationchange','seeked'].forEach(function(name){
+    document.addEventListener(name,function(event){
+      const box=boxOf(event.target);
+      if(box)draw(box);
+    },true);
+  });
+
+  document.addEventListener('play',function(event){
+    const box=boxOf(event.target);
+    if(!box)return;
+    document.querySelectorAll('audio').forEach(function(other){
+      if(other!==event.target&&!other.paused)other.pause();
+    });
+    draw(box);
+  },true);
+
+  document.addEventListener('ended',function(event){
+    const box=boxOf(event.target);
+    if(!box)return;
+    event.target.currentTime=0;
+    draw(box);
+  },true);
+
+  document.addEventListener('loadedmetadata',function(event){
+    const box=boxOf(event.target);
+    if(!box)return;
+    const audio=event.target;
+    if(audio.duration===Infinity&&!audio._durationFixed){
+      audio._durationFixed=true;
+      try{
+        audio.currentTime=1e101;
+        audio.addEventListener('timeupdate',function fix(){
+          audio.removeEventListener('timeupdate',fix);
+          audio.currentTime=0;
+          draw(box);
+        });
+      }catch(error){}
+    }
+    draw(box);
+  },true);
+})();
 
 function shortDate(value){
   const text=String(value||'');
