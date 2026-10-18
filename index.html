@@ -501,6 +501,7 @@ button.camp-a:disabled,button.camp-b:disabled{opacity:.85}
 .camp-tag{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:bold;color:#fff;vertical-align:middle}
 .camp-tag.camp-a{background:#16815f}
 .camp-tag.camp-b{background:#ec4899}
+button.camp-a.selected,button.camp-b.selected{box-shadow:inset 0 0 0 3px #fff}
 .daily-debate{border-color:#7c3aed}
 .daily-question{font-size:17px;font-weight:bold;margin:8px 0}
 
@@ -517,6 +518,17 @@ button.green[onclick^="showComposer('debat')"]{background:var(--debat-launch,#16
 .bottom .create{color:var(--create-text,#fff)}
 .bottom .messages{color:var(--messages-text,#fff)}
 .bottom .profile{color:var(--profile-text,#fff)}
+
+
+/* ===== Lien de profil et contacts ===== */
+.link-card{position:fixed;inset:0;z-index:50;background:rgba(14,10,31,.82);display:flex;align-items:center;justify-content:center;padding:16px}
+.link-card-box{background:#1a1330;border:1px solid #574471;border-radius:18px;padding:16px;max-width:360px;width:100%}
+.link-card-who{display:flex;align-items:center;gap:10px;margin:10px 0}
+body .link-card .avatar{width:48px;height:48px;flex-basis:48px;font-size:20px;margin:0}
+.contact-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #44335e}
+.contact-row strong{flex:1;min-width:0;overflow-wrap:anywhere}
+.contact-row button{margin:0;padding:8px 12px;font-size:12px}
+#profileLink{font-size:12px}
 
 /* 3bis. Contour bleu ciel dans les champs de saisie */
 input:focus,textarea:focus,select:focus{border-color:#38bdf8}
@@ -630,6 +642,9 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px soli
   <input id="friendSearch" placeholder="Nom ou pseudonyme">
   <button class="orange full" onclick="searchFriends()">Rechercher</button>
   <div id="friendResults"></div>
+  <hr><h3>Mes contacts</h3>
+  <div id="contactList"></div>
+  <p class="notice">Ajoute quelqu'un en ouvrant le lien de profil qu'il partage.</p>
 </section>
 
 <section id="messages" class="panel hidden">
@@ -654,13 +669,21 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px soli
   <label for="displayName">Nom affiché</label>
   <input id="displayName" maxlength="60" placeholder="Ton nom ou pseudonyme">
   <button class="pink full" onclick="saveProfile()">Enregistrer le nom</button>
+  <p id="nameLimitNote" class="notice"></p>
 
   <hr><h3>Photo de profil</h3>
   <div id="profilePhotoPreview" class="profile-photo"></div>
   <label for="profilePhoto">Choisir ma photo</label>
   <input id="profilePhoto" type="file" accept="image/*" onchange="chooseProfilePhoto(this)">
   <button class="full" onclick="removeProfilePhoto()">Retirer ma photo</button>
-  <p class="notice">La photo est enregistrée sur cet appareil avec ton nom affiché. Si tu changes de nom, choisis-la de nouveau.</p>
+  <p id="photoLimitNote" class="notice"></p>
+  <p class="notice">La photo est enregistrée sur cet appareil et reste liée à ton profil, même si tu changes de nom.</p>
+
+  <hr><h3>Mon lien de profil</h3>
+  <input id="profileLink" readonly>
+  <button class="full" onclick="copyProfileLink()">Copier mon lien</button>
+  <button class="full" onclick="shareProfileLink()">Partager mon lien</button>
+  <p class="notice">Celui qui ouvre ce lien peut t'ajouter à ses contacts. Le nom dans le lien n'est pas vérifié tant qu'il n'y a pas de comptes sur un espace commun.</p>
 
   <hr><h3>PARAMÈTRES → APPARENCE</h3>
   <label for="accentColor">Couleur des LOVES</label><input id="accentColor" type="color" value="#ed4dba">
@@ -783,6 +806,7 @@ function init(){
   novas=Number(localStorage.getItem(NOVAS_STORE)??0);
   updateBalances();
   loadProfile();
+  handleProfileLink();
   loadColors();
   renderFeed();
   showSaved();
@@ -820,7 +844,7 @@ function updateBalances(){
 }
 
 function addActivity(text){
-  activities.unshift({id:safeId(),name:profileName(),text,time:new Date().toLocaleString(),read:false});
+  activities.unshift({id:safeId(),name:profileName(),authorId:myUserId(),text,time:new Date().toLocaleString(),read:false});
   activities=activities.slice(0,100);
   saveJSON(ACTIVITY_STORE,activities);
   renderActivities();
@@ -843,11 +867,11 @@ function renderActivities(){
     if(a.name){
       const row=document.createElement('div');
       row.className='activity-row';
-      row.innerHTML=avatarHTML(a.name);
+      row.innerHTML=avatarHTML(displayName(a),a.authorId);
       const body=document.createElement('div');
       body.className='activity-body';
       const who=document.createElement('strong');
-      who.textContent=a.name;
+      who.textContent=displayName(a);
       const what=document.createElement('span');
       what.textContent=a.text;
       const when=document.createElement('small');
@@ -1027,7 +1051,7 @@ async function publish(){
 
   const post={
     id:safeId(),
-    name:profileName(),
+    name:profileName(),authorId:myUserId(),
     text,
     media,
     date:new Date().toISOString(),
@@ -1207,7 +1231,7 @@ async function publishVoice(){
 
     const post={
       id:safeId(),
-      name:profileName(),
+      name:profileName(),authorId:myUserId(),
       text:document.getElementById('voiceText').value.trim(),
       media:[{type:'audio',data}],
       date:new Date().toISOString(),
@@ -1342,14 +1366,37 @@ function renderDebatePanel(post){
   const stats=debatePercents(poll);
   const options=poll.options||[];
   const showResult=!!poll.voted||closed;
+  const votedIdx=Number.isInteger(poll.votedIndex)?poll.votedIndex:null;
+  const legacy=!!poll.voted&&votedIdx===null;
+  const canChange=!!poll.voted&&!closed&&!legacy;
   const label=function(i){return esc(options[i]||(i===0?'POUR':'CONTRE'));};
   const buttons=[0,1].map(function(i){
     const count=i===0?stats.a:stats.b;
-    return '<button type="button" class="camp-'+(i===0?'a':'b')+'" onclick="votePoll(\''+esc(post.id)+'\','+i+')"'
-      +((poll.voted||closed)?' disabled':'')+'>'
-      +(showResult?label(i)+' · '+count+' vote(s)':'Voter '+label(i))
-      +'</button>';
+    const mine=!!poll.voted&&votedIdx===i;
+    let text;
+    if(!showResult){
+      text='Voter '+label(i);
+    }else if(mine){
+      text='✓ '+label(i)+' · '+count+' vote(s)';
+    }else if(canChange){
+      text='Passer à '+label(i)+' · '+count+' vote(s)';
+    }else{
+      text=label(i)+' · '+count+' vote(s)';
+    }
+    const disabled=closed||mine||legacy;
+    return '<button type="button" class="camp-'+(i===0?'a':'b')+(mine?' selected':'')+'" onclick="votePoll(\''+esc(post.id)+'\','+i+')"'
+      +(disabled?' disabled':'')+'>'+text+'</button>';
   }).join('');
+  let voteNote='';
+  if(poll.voted){
+    if(legacy){
+      voteNote=' · Ton vote est enregistré sur cet appareil (non modifiable).';
+    }else if(closed){
+      voteNote=' · Ton vote : '+label(votedIdx)+'.';
+    }else{
+      voteNote=' · Ton vote : '+label(votedIdx)+' (tu peux le changer tant que le débat est ouvert).';
+    }
+  }
   return '<div class="debate-panel">'
     +'<div class="debate-top"><h3>🗳️ Débat</h3><span class="debate-time">'+esc(debateTimeLabel(poll))+'</span></div>'
     +(showResult
@@ -1357,10 +1404,191 @@ function renderDebatePanel(post){
        +'<div class="result-labels"><span class="lab-a">'+label(0)+' '+stats.pa+' %</span><span class="lab-b">'+label(1)+' '+stats.pb+' %</span></div>'
       :'')
     +'<div class="row">'+buttons+'</div>'
-    +'<p class="notice">'+stats.total+' voix · 1 vote par personne'
-    +(poll.voted?' · Ton vote a été enregistré sur cet appareil.':'')
-    +(closed?' · Débat terminé.':'')+'</p>'
+    +'<p class="notice">'+stats.total+' voix · 1 vote par personne'+voteNote+(closed?' · Débat terminé.':'')+'</p>'
+    +(showResult?'<button type="button" class="full" onclick="shareDebateCard(\''+esc(post.id)+'\')">Partager la carte résultat</button>':'')
     +'</div>';
+}
+
+function retagAvis(list,name,camp,changes){
+  if(!Array.isArray(list))return;
+  list.forEach(function(comment){
+    if(!comment)return;
+    if(isMine(comment)&&Number.isInteger(comment.camp)&&comment.camp!==camp){
+      changes.push({comment:comment,old:comment.camp});
+      comment.camp=camp;
+    }
+    retagAvis(comment.children,name,camp,changes);
+  });
+}
+
+/* ===== Carte résultat d'un débat (image à partager) ===== */
+function wrapCanvasText(ctx,text,maxWidth,maxLines){
+  const pieces=[];
+  String(text||'').split(/\s+/).filter(Boolean).forEach(function(word){
+    let rest=word;
+    while(rest.length>1&&ctx.measureText(rest).width>maxWidth){
+      let cut=rest.length-1;
+      while(cut>1&&ctx.measureText(rest.slice(0,cut)).width>maxWidth)cut--;
+      pieces.push(rest.slice(0,cut));
+      rest=rest.slice(cut);
+    }
+    pieces.push(rest);
+  });
+  const lines=[];
+  let line='';
+  pieces.forEach(function(word){
+    const test=line?line+' '+word:word;
+    if(!line||ctx.measureText(test).width<=maxWidth){
+      line=test;
+    }else{
+      lines.push(line);
+      line=word;
+    }
+  });
+  if(line)lines.push(line);
+  if(lines.length>maxLines){
+    const kept=lines.slice(0,maxLines);
+    let last=kept[maxLines-1];
+    while(last.length>1&&ctx.measureText(last+'…').width>maxWidth)last=last.slice(0,-1);
+    kept[maxLines-1]=last+'…';
+    return kept;
+  }
+  return lines;
+}
+
+function roundRectPath(ctx,x,y,w,h,r){
+  const radius=Math.min(r,w/2,h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+radius,y);
+  ctx.arcTo(x+w,y,x+w,y+h,radius);
+  ctx.arcTo(x+w,y+h,x,y+h,radius);
+  ctx.arcTo(x,y+h,x,y,radius);
+  ctx.arcTo(x,y,x+w,y,radius);
+  ctx.closePath();
+}
+
+function buildDebateCard(post){
+  const poll=post.poll;
+  const stats=debatePercents(poll);
+  const options=poll.options||[];
+  const nameA=String(options[0]||'POUR');
+  const nameB=String(options[1]||'CONTRE');
+  const closed=isDebateClosed(poll);
+  const W=1080,H=1350;
+  const canvas=document.createElement('canvas');
+  canvas.width=W;
+  canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  const font='system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+
+  const bg=ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,'#1a0b2e');
+  bg.addColorStop(1,'#0e0a1f');
+  ctx.fillStyle=bg;
+  ctx.fillRect(0,0,W,H);
+  const glow=ctx.createRadialGradient(W*0.2,0,40,W*0.2,0,760);
+  glow.addColorStop(0,'rgba(124,58,237,0.45)');
+  glow.addColorStop(1,'rgba(124,58,237,0)');
+  ctx.fillStyle=glow;
+  ctx.fillRect(0,0,W,H);
+
+  ctx.textAlign='left';
+  ctx.textBaseline='alphabetic';
+  ctx.fillStyle='#38bdf8';
+  ctx.font='bold 68px '+font;
+  ctx.fillText('JUNOVABOOK',70,125);
+
+  const status=closed?'RÉSULTAT FINAL':'RÉSULTAT ACTUEL';
+  ctx.font='bold 34px '+font;
+  const statusWidth=ctx.measureText(status).width+60;
+  roundRectPath(ctx,70,170,statusWidth,66,33);
+  ctx.fillStyle='#0ea5e9';
+  ctx.fill();
+  ctx.fillStyle='#ffffff';
+  ctx.fillText(status,100,215);
+
+  const question=String(post.text||'').trim()||'Débat sans titre';
+  ctx.fillStyle='#ffffff';
+  ctx.font='bold 70px '+font;
+  const lines=wrapCanvasText(ctx,question,W-140,6);
+  lines.forEach(function(line,i){ctx.fillText(line,70,360+i*88);});
+
+  const barX=70,barY=930,barW=W-140,barH=64;
+  roundRectPath(ctx,barX,barY,barW,barH,32);
+  ctx.fillStyle='#574471';
+  ctx.fill();
+  if(stats.total>0){
+    ctx.save();
+    roundRectPath(ctx,barX,barY,barW,barH,32);
+    ctx.clip();
+    ctx.fillStyle='#16815f';
+    ctx.fillRect(barX,barY,barW*stats.pa/100,barH);
+    ctx.fillStyle='#ec4899';
+    ctx.fillRect(barX+barW*stats.pa/100,barY,barW*stats.pb/100,barH);
+    ctx.restore();
+  }
+
+  ctx.font='bold 130px '+font;
+  ctx.textAlign='left';
+  ctx.fillStyle='#4ade80';
+  ctx.fillText(stats.pa+' %',70,1140);
+  ctx.textAlign='right';
+  ctx.fillStyle='#f472b6';
+  ctx.fillText(stats.pb+' %',W-70,1140);
+
+  ctx.font='bold 46px '+font;
+  ctx.textAlign='left';
+  ctx.fillStyle='#4ade80';
+  ctx.fillText(wrapCanvasText(ctx,nameA,440,1)[0]||'',70,1205);
+  ctx.textAlign='right';
+  ctx.fillStyle='#f472b6';
+  ctx.fillText(wrapCanvasText(ctx,nameB,440,1)[0]||'',W-70,1205);
+
+  ctx.textAlign='left';
+  ctx.font='36px '+font;
+  ctx.fillStyle='#c9bde5';
+  ctx.fillText(stats.total+' voix · 1 vote par personne',70,1275);
+
+  ctx.textAlign='right';
+  ctx.font='32px '+font;
+  ctx.fillStyle='#8f84ab';
+  let address='JUNOVABOOK';
+  try{
+    if(location&&location.protocol.indexOf('http')===0)address=location.host+location.pathname.replace(/index\.html$/,'');
+  }catch(e){}
+  ctx.fillText(address,W-70,1275);
+
+  return canvas;
+}
+
+async function shareDebateCard(id){
+  const post=posts.find(function(p){return String(p.id)===String(id);});
+  if(!post||!post.poll)return;
+  try{
+    const canvas=buildDebateCard(post);
+    const blob=await new Promise(function(resolve){canvas.toBlob(resolve,'image/png');});
+    if(!blob)throw new Error('image');
+    const file=new File([blob],'junovabook-debat.png',{type:'image/png'});
+    if(navigator.canShare&&navigator.share&&navigator.canShare({files:[file]})){
+      try{
+        await navigator.share({files:[file],title:'Débat JUNOVABOOK',text:'Résultat du débat sur JUNOVABOOK'});
+        return;
+      }catch(e){
+        if(e&&e.name==='AbortError')return;
+      }
+    }
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');
+    link.href=url;
+    link.download='junovabook-debat.png';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},10000);
+    alert('La carte résultat a été enregistrée comme image sur ton appareil.');
+  }catch(e){
+    alert('Impossible de créer la carte résultat.');
+  }
 }
 
 function pickDailyDebate(){
@@ -1419,9 +1647,8 @@ function postTitle(post){
 
 function notifyDebateOwner(post,verb){
   if(!post)return;
-  const owner=String(post.name||'Membre JUNOVABOOK');
   const actor=profileName();
-  if(owner===actor)return;
+  if(isMine(post))return;
   const key='post-'+post.id;
   const now=Date.now();
   const kind=post.poll?'ton débat':'ta publication';
@@ -1459,6 +1686,305 @@ function autoStopAudioAvis(){
   }
 }
 
+/* ===== Identité : identifiant unique, limites de changement, lien de profil, contacts ===== */
+function userIdKey(){return 'junovabook_user_id';}
+
+function randomId(){
+  const chars='abcdefghijkmnpqrstuvwxyz23456789';
+  const bytes=new Uint8Array(12);
+  if(window.crypto&&window.crypto.getRandomValues){
+    window.crypto.getRandomValues(bytes);
+  }else{
+    for(let i=0;i<bytes.length;i++)bytes[i]=Math.floor(Math.random()*256);
+  }
+  let out='';
+  for(let i=0;i<bytes.length;i++)out+=chars.charAt(bytes[i]%chars.length);
+  return out;
+}
+
+function myUserId(){
+  let id=localStorage.getItem(userIdKey());
+  if(!id||!/^[a-z0-9]{8,32}$/.test(id)){
+    id=randomId();
+    try{localStorage.setItem(userIdKey(),id);}catch(e){}
+  }
+  return id;
+}
+
+function nameHistoryKey(){return 'junovabook_name_history';}
+
+function loadNameHistory(){
+  try{
+    const value=JSON.parse(localStorage.getItem(nameHistoryKey())||'[]');
+    return Array.isArray(value)?value.filter(function(x){return typeof x==='string';}):[];
+  }catch(e){
+    return [];
+  }
+}
+
+function myNames(){
+  return [profileName()].concat(loadNameHistory());
+}
+
+function isMine(item){
+  if(!item)return false;
+  if(item.authorId)return item.authorId===myUserId();
+  return myNames().indexOf(String(item.name||'Membre JUNOVABOOK'))!==-1;
+}
+
+function displayName(item){
+  return isMine(item)?profileName():String((item&&item.name)||'Membre JUNOVABOOK');
+}
+
+function changeKey(kind){return 'junovabook_'+kind+'_changed_at';}
+
+function remainingMs(kind,days){
+  const last=Number(localStorage.getItem(changeKey(kind)))||0;
+  if(!last)return 0;
+  return Math.max(0,last+days*86400000-Date.now());
+}
+
+function remainingText(ms){
+  const days=Math.max(1,Math.ceil(ms/86400000));
+  return days>1?days+' jours':'1 jour';
+}
+
+function markChange(kind){
+  try{localStorage.setItem(changeKey(kind),String(Date.now()));}catch(e){}
+}
+
+function renderLimitNotes(){
+  const nameNote=document.getElementById('nameLimitNote');
+  if(nameNote){
+    const wait=remainingMs('name',20);
+    nameNote.textContent=wait>0?'Tu pourras changer ton nom dans '+remainingText(wait)+'.':'Tu peux changer ton nom tous les 20 jours.';
+  }
+  const photoNote=document.getElementById('photoLimitNote');
+  if(photoNote){
+    const wait=remainingMs('photo',7);
+    photoNote.textContent=wait>0?'Tu pourras changer ta photo dans '+remainingText(wait)+'.':'Tu peux changer ta photo tous les 7 jours.';
+  }
+}
+
+/* ----- Photo de profil, liée à l'identifiant ----- */
+function migrateAvatars(){
+  const photos=loadAvatars();
+  const id=myUserId();
+  const name=profileName();
+  if(!photos[id]&&typeof photos[name]==='string'){
+    photos[id]=photos[name];
+    delete photos[name];
+    try{localStorage.setItem(avatarStoreKey(),JSON.stringify(photos));}catch(e){}
+  }
+}
+
+function avatarFor(userId){
+  const photo=loadAvatars()[String(userId||'')];
+  return typeof photo==='string'&&photo.indexOf('data:image/')===0?photo:'';
+}
+
+function avatarHTML(name,authorId){
+  const label=String(name||'Membre JUNOVABOOK');
+  const mine=authorId?authorId===myUserId():myNames().indexOf(label)!==-1;
+  const photo=mine?avatarFor(myUserId()):'';
+  if(photo)return '<span class="avatar"><img src="'+esc(photo)+'" alt=""></span>';
+  const letter=(label.trim().charAt(0)||'M').toUpperCase();
+  return '<span class="avatar">'+esc(letter)+'</span>';
+}
+
+function renderProfilePhoto(){
+  const box=document.getElementById('profilePhotoPreview');
+  if(box)box.innerHTML=avatarHTML(profileName(),myUserId());
+}
+
+async function chooseProfilePhoto(input){
+  const file=input.files&&input.files[0];
+  if(!file)return;
+  const photos=loadAvatars();
+  const id=myUserId();
+  const hadPhoto=!!photos[id];
+  if(hadPhoto){
+    const wait=remainingMs('photo',7);
+    if(wait>0){
+      alert('Tu pourras changer ta photo dans '+remainingText(wait)+'.');
+      input.value='';
+      return;
+    }
+  }
+  if(!file.type.startsWith('image/')){
+    alert('Choisis une image.');
+    input.value='';
+    return;
+  }
+  if(file.size>10*1024*1024){
+    alert('Cette photo dépasse 10 Mo. Choisis-en une plus légère.');
+    input.value='';
+    return;
+  }
+  try{
+    const dataUrl=await squareThumbnail(file,96);
+    photos[id]=dataUrl;
+    localStorage.setItem(avatarStoreKey(),JSON.stringify(photos));
+    if(hadPhoto)markChange('photo');
+    renderProfilePhoto();
+    renderLimitNotes();
+    renderFeed();
+    addActivity('Ta photo de profil a été enregistrée.');
+    alert('Photo enregistrée sur cet appareil.');
+  }catch(e){
+    alert('Impossible de lire cette photo. Essaie une autre image.');
+  }
+  input.value='';
+}
+
+function removeProfilePhoto(){
+  const photos=loadAvatars();
+  const id=myUserId();
+  if(!photos[id])return;
+  const wait=remainingMs('photo',7);
+  if(wait>0){
+    alert('Tu pourras changer ta photo dans '+remainingText(wait)+'.');
+    return;
+  }
+  delete photos[id];
+  try{localStorage.setItem(avatarStoreKey(),JSON.stringify(photos));}catch(e){}
+  markChange('photo');
+  renderProfilePhoto();
+  renderLimitNotes();
+  renderFeed();
+  renderActivities();
+}
+
+/* ----- Lien de profil ----- */
+function profileLinkFor(){
+  const base=location.href.split(/[?#]/)[0];
+  return base+'?u='+encodeURIComponent(myUserId())+'&n='+encodeURIComponent(profileName());
+}
+
+function renderProfileLink(){
+  const input=document.getElementById('profileLink');
+  if(input)input.value=profileLinkFor();
+}
+
+function copyProfileLink(){
+  const link=profileLinkFor();
+  const fallback=function(){
+    const input=document.getElementById('profileLink');
+    try{
+      input.focus();
+      input.select();
+      if(document.execCommand('copy')){alert('Lien copié.');return;}
+    }catch(e){}
+    prompt('Copie ce lien :',link);
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(link).then(function(){alert('Lien copié.');},fallback);
+  }else{
+    fallback();
+  }
+}
+
+async function shareProfileLink(){
+  const link=profileLinkFor();
+  if(navigator.share){
+    try{
+      await navigator.share({title:'Mon profil JUNOVABOOK',text:profileName()+' sur JUNOVABOOK',url:link});
+      return;
+    }catch(e){
+      if(e&&e.name==='AbortError')return;
+    }
+  }
+  copyProfileLink();
+}
+
+function cleanContactName(raw){
+  return String(raw||'').replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,60);
+}
+
+function parseProfileLink(search){
+  let params;
+  try{params=new URLSearchParams(search||'');}catch(e){return null;}
+  const id=params.get('u');
+  if(!id||!/^[a-z0-9]{8,32}$/.test(id))return null;
+  return {id:id,name:cleanContactName(params.get('n'))||'Membre JUNOVABOOK'};
+}
+
+/* ----- Contacts ----- */
+function contactsKey(){return 'junovabook_contacts';}
+
+function loadContacts(){
+  try{
+    const value=JSON.parse(localStorage.getItem(contactsKey())||'{}');
+    return value&&typeof value==='object'&&!Array.isArray(value)?value:{};
+  }catch(e){
+    return {};
+  }
+}
+
+function addContact(id,name){
+  const contacts=loadContacts();
+  contacts[id]={name:cleanContactName(name)||'Membre JUNOVABOOK',addedAt:Date.now()};
+  try{localStorage.setItem(contactsKey(),JSON.stringify(contacts));}catch(e){
+    alert('Impossible d’enregistrer ce contact.');
+    return;
+  }
+  renderContacts();
+  addActivity(contacts[id].name+' a été ajouté à tes contacts.');
+}
+
+function removeContact(id){
+  const contacts=loadContacts();
+  delete contacts[id];
+  try{localStorage.setItem(contactsKey(),JSON.stringify(contacts));}catch(e){}
+  renderContacts();
+}
+
+function renderContacts(){
+  const box=document.getElementById('contactList');
+  if(!box)return;
+  const contacts=loadContacts();
+  const ids=Object.keys(contacts).filter(function(id){return /^[a-z0-9]{8,32}$/.test(id);});
+  if(!ids.length){
+    box.innerHTML='<p class="empty">Aucun contact pour le moment.</p>';
+    return;
+  }
+  box.innerHTML=ids.map(function(id){
+    const name=cleanContactName(contacts[id]&&contacts[id].name)||'Membre JUNOVABOOK';
+    return '<div class="contact-row">'+avatarHTML(name,id)+'<strong>'+esc(name)+'</strong>'
+      +'<button type="button" onclick="removeContact(\''+id+'\')">Retirer</button></div>';
+  }).join('');
+}
+
+function showProfileLinkCard(id,name){
+  const old=document.getElementById('profileLinkCard');
+  if(old)old.remove();
+  const known=!!loadContacts()[id];
+  const card=document.createElement('div');
+  card.id='profileLinkCard';
+  card.className='link-card';
+  card.innerHTML='<div class="link-card-box"><h3>Profil JUNOVABOOK</h3>'
+    +'<div class="link-card-who">'+avatarHTML(name,id)+'<strong>'+esc(name)+'</strong></div>'
+    +'<p class="notice">Nom indiqué dans le lien, non vérifié.</p>'
+    +(known?'<p class="notice">Déjà dans tes contacts.</p>':'')
+    +'<div class="row"><button type="button" id="linkCardAdd"'+(known?' disabled':'')+'>Ajouter à mes contacts</button>'
+    +'<button type="button" id="linkCardClose">Fermer</button></div></div>';
+  document.body.appendChild(card);
+  document.getElementById('linkCardClose').onclick=function(){card.remove();};
+  document.getElementById('linkCardAdd').onclick=function(){addContact(id,name);card.remove();};
+}
+
+function handleProfileLink(){
+  const parsed=parseProfileLink(location.search);
+  if(!location.search||!/[?&]u=/.test(location.search))return;
+  try{history.replaceState(null,'',location.href.split(/[?#]/)[0]);}catch(e){}
+  if(!parsed)return;
+  if(parsed.id===myUserId()){
+    alert('C’est ton propre lien de profil.');
+    return;
+  }
+  showProfileLinkCard(parsed.id,parsed.name);
+}
+
 /* ===== Photo de profil (enregistrée sur cet appareil, par nom affiché) ===== */
 function avatarStoreKey(){return 'junovabook_avatars';}
 
@@ -1471,23 +1997,8 @@ function loadAvatars(){
   }
 }
 
-function avatarFor(name){
-  const photo=loadAvatars()[String(name||'')];
-  return typeof photo==='string'&&photo.indexOf('data:image/')===0?photo:'';
-}
 
-function avatarHTML(name){
-  const label=String(name||'Membre JUNOVABOOK');
-  const photo=avatarFor(label);
-  if(photo)return '<span class="avatar"><img src="'+esc(photo)+'" alt=""></span>';
-  const letter=(label.trim().charAt(0)||'M').toUpperCase();
-  return '<span class="avatar">'+esc(letter)+'</span>';
-}
 
-function renderProfilePhoto(){
-  const box=document.getElementById('profilePhotoPreview');
-  if(box)box.innerHTML=avatarHTML(profileName());
-}
 
 function loadImageElement(file){
   return new Promise(function(resolve,reject){
@@ -1512,43 +2023,6 @@ async function squareThumbnail(file,size){
   ctx.fillRect(0,0,size,size);
   ctx.drawImage(img,sx,sy,side,side,0,0,size,size);
   return canvas.toDataURL('image/jpeg',0.82);
-}
-
-async function chooseProfilePhoto(input){
-  const file=input.files&&input.files[0];
-  if(!file)return;
-  if(!file.type.startsWith('image/')){
-    alert('Choisis une image.');
-    input.value='';
-    return;
-  }
-  if(file.size>10*1024*1024){
-    alert('Cette photo dépasse 10 Mo. Choisis-en une plus légère.');
-    input.value='';
-    return;
-  }
-  try{
-    const dataUrl=await squareThumbnail(file,96);
-    const photos=loadAvatars();
-    photos[profileName()]=dataUrl;
-    localStorage.setItem(avatarStoreKey(),JSON.stringify(photos));
-    renderProfilePhoto();
-    renderFeed();
-    addActivity('Ta photo de profil a été enregistrée.');
-    alert('Photo enregistrée sur cet appareil.');
-  }catch(e){
-    alert('Impossible de lire cette photo. Essaie une autre image.');
-  }
-  input.value='';
-}
-
-function removeProfilePhoto(){
-  const photos=loadAvatars();
-  delete photos[profileName()];
-  try{localStorage.setItem(avatarStoreKey(),JSON.stringify(photos));}catch(e){}
-  renderProfilePhoto();
-  renderFeed();
-  renderActivities();
 }
 
 /* ===== Réduction automatique des photos de plus de 2,5 Mo ===== */
@@ -1850,7 +2324,7 @@ function commentNode(post,comment,depth=0){
     <div class="reply ${isReply?'is-reply':''}" id="comment-${esc(comment.id)}">
       <span class="comment-badge">${badge}${audioBadge}</span>
       <div class="comment-head">
-        <strong class="who">${avatarHTML(comment.name||'Membre JUNOVABOOK')}${esc(comment.name||'Membre JUNOVABOOK')}</strong>${campTagHTML(post,comment)}
+        <strong class="who">${avatarHTML(displayName(comment),comment.authorId)}${esc(displayName(comment))}</strong>${campTagHTML(post,comment)}
         <small>${esc(shortDate(comment.date))}</small>
       </div>
 
@@ -1898,7 +2372,7 @@ function renderFeed(){
 
     card.innerHTML=`
       <div class="row" style="align-items:center;justify-content:space-between">
-        <strong class="who">${avatarHTML(post.name||'Membre JUNOVABOOK')}${esc(post.name||'Membre JUNOVABOOK')}</strong>
+        <strong class="who">${avatarHTML(displayName(post),post.authorId)}${esc(displayName(post))}</strong>
         <small>${esc(post.date?shortDate(new Date(post.date).toLocaleString()):'')}</small>
       </div>
 
@@ -2005,7 +2479,7 @@ function addComment(id){
   post.comments=post.comments||[];
   post.comments.push({
     id:safeId(),
-    name:profileName(),
+    name:profileName(),authorId:myUserId(),
     text,
     media:[],
     children:[],
@@ -2044,7 +2518,7 @@ function replyToComment(postId,commentId){
 
   comment.children.push({
     id:safeId(),
-    name:profileName(),
+    name:profileName(),authorId:myUserId(),
     text:text.trim(),
     media:[],
     children:[],
@@ -2163,7 +2637,7 @@ async function openAudioComment(postId){
 
         post.comments.push({
           id:safeId(),
-          name:profileName(),
+          name:profileName(),authorId:myUserId(),
           text:'',
           media:[{type:'audio',data}],
           children:[],
@@ -2295,7 +2769,7 @@ async function startAudioReply(postId,commentId){
 
         currentParent.children.push({
           id:safeId(),
-          name:profileName(),
+          name:profileName(),authorId:myUserId(),
           text:'',
           media:[{type:'audio',data}],
           children:[],
@@ -2348,30 +2822,53 @@ async function startAudioReply(postId,commentId){
 
 function votePoll(id,index){
   const post=posts.find(p=>String(p.id)===String(id));
-  if(!post||!post.poll||post.poll.voted)return;
+  if(!post||!post.poll)return;
 
-  if(isDebateClosed(post.poll)){
+  const poll=post.poll;
+  if(index<0||index>1)return;
+
+  if(isDebateClosed(poll)){
     alert('Ce débat est terminé : on ne peut plus voter.');
     return;
   }
 
-  if(index<0||index>1)return;
+  poll.votes=poll.votes||[0,0];
+  const hadVote=!!poll.voted;
+  const oldIndex=Number.isInteger(poll.votedIndex)?poll.votedIndex:null;
 
-  post.poll.votes=post.poll.votes||[0,0];
-  post.poll.votes[index]=(Number(post.poll.votes[index])||0)+1;
-  post.poll.voted=true;
-  post.poll.votedIndex=index;
+  if(hadVote&&oldIndex===null)return;
+  if(hadVote&&oldIndex===index)return;
+
+  const backupVotes=poll.votes.slice();
+  const backupVoted=poll.voted;
+  const backupIndex=poll.votedIndex;
+  const changes=[];
+
+  if(hadVote){
+    poll.votes[oldIndex]=Math.max(0,(Number(poll.votes[oldIndex])||0)-1);
+  }
+  poll.votes[index]=(Number(poll.votes[index])||0)+1;
+  poll.voted=true;
+  poll.votedIndex=index;
+  if(hadVote)retagAvis(post.comments,profileName(),index,changes);
   noteDebateActivity(post);
 
   if(!persistPosts()){
-    post.poll.votes[index]--;
-    post.poll.voted=false;
-    delete post.poll.votedIndex;
+    poll.votes=backupVotes;
+    poll.voted=backupVoted;
+    if(backupIndex===undefined){delete poll.votedIndex;}else{poll.votedIndex=backupIndex;}
+    changes.forEach(function(change){change.comment.camp=change.old;});
     return;
   }
 
-  addActivity('Ton vote au débat a été enregistré.');
-  notifyDebateOwner(post,'a voté '+((post.poll.options||[])[index]||''));
+  const label=(poll.options||[])[index]||'';
+  if(hadVote){
+    addActivity('Ton vote au débat a été modifié : '+label+'.');
+    notifyDebateOwner(post,'a changé son vote pour '+label);
+  }else{
+    addActivity('Ton vote au débat a été enregistré.');
+    notifyDebateOwner(post,'a voté '+label);
+  }
   renderFeed();
 }
 
@@ -2519,15 +3016,42 @@ function saveProfile(){
     return;
   }
 
-  localStorage.setItem(PROFILE_STORE,name);
+  const current=profileName();
+  const hadSaved=!!localStorage.getItem(PROFILE_STORE);
+
+  if(name!==current){
+    if(hadSaved){
+      const wait=remainingMs('name',20);
+      if(wait>0){
+        alert('Tu pourras changer ton nom dans '+remainingText(wait)+'.');
+        document.getElementById('displayName').value=current;
+        return;
+      }
+    }
+    const history=loadNameHistory();
+    if(history.indexOf(current)===-1)history.push(current);
+    try{localStorage.setItem(nameHistoryKey(),JSON.stringify(history.slice(-30)));}catch(e){}
+    localStorage.setItem(PROFILE_STORE,name);
+    if(hadSaved)markChange('name');
+  }else{
+    localStorage.setItem(PROFILE_STORE,name);
+  }
+
   renderProfilePhoto();
+  renderLimitNotes();
+  renderProfileLink();
+  renderFeed();
   addActivity('Ton nom de profil a été enregistré.');
   alert('Nom enregistré sur cet appareil.');
 }
 
 function loadProfile(){
   document.getElementById('displayName').value=localStorage.getItem(PROFILE_STORE)||'';
+  migrateAvatars();
   renderProfilePhoto();
+  renderLimitNotes();
+  renderProfileLink();
+  renderContacts();
 }
 
 function colorSettings(){
