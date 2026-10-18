@@ -484,6 +484,40 @@ body .activity-row .avatar{width:36px;height:36px;flex-basis:36px;font-size:16px
 /* Choix de l'extrait audio */
 #voiceTrimStart{width:100%;margin:8px 0}
 
+
+/* ===== Débat vocal ===== */
+.debate-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.debate-top h3{margin:0}
+.debate-time{font-size:12px;color:#c9bde5;white-space:nowrap}
+.result-bar{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:10px 0 4px;background:#574471}
+.result-bar .res-a{background:#16815f}
+.result-bar .res-b{background:#ec4899}
+.result-labels{display:flex;justify-content:space-between;font-size:12px;font-weight:bold;margin-bottom:8px}
+.lab-a{color:#4ade80}
+.lab-b{color:#f472b6}
+button.camp-a{background:#16815f}
+button.camp-b{background:#ec4899}
+button.camp-a:disabled,button.camp-b:disabled{opacity:.85}
+.camp-tag{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:bold;color:#fff;vertical-align:middle}
+.camp-tag.camp-a{background:#16815f}
+.camp-tag.camp-b{background:#ec4899}
+.daily-debate{border-color:#7c3aed}
+.daily-question{font-size:17px;font-weight:bold;margin:8px 0}
+
+/* ===== Boutons dont la couleur se règle dans PROFIL (texte noir ou blanc automatique) ===== */
+#expressionChoices .blue{background:var(--voice,#245fbd);color:var(--voice-text,#fff)}
+#expressionButton{background:var(--express,#c58a25);color:var(--express-text,#1c102b)}
+button.primary[onclick^="showComposer('publication')"]{background:linear-gradient(90deg,var(--pub-a,#7c3aed),var(--pub-b,#d946ef));color:var(--pub-text,#fff)}
+button.green[onclick^="showComposer('debat')"]{background:var(--debat-launch,#16815f);color:var(--debat-launch-text,#fff)}
+.actions button[onclick^="toggleComments"]{background:var(--debats,#245fbd) !important;color:var(--debats-text,#fff)}
+.actions button[onclick^="sharePost"]{background:var(--diffusions,#16815f) !important;color:var(--diffusions-text,#fff)}
+.actions button[onclick^="lovePost"]{color:var(--accent-text,#fff)}
+.bottom .home{color:var(--home-text,#fff)}
+.bottom .friends{color:var(--friends-text,#fff)}
+.bottom .create{color:var(--create-text,#fff)}
+.bottom .messages{color:var(--messages-text,#fff)}
+.bottom .profile{color:var(--profile-text,#fff)}
+
 /* 3bis. Contour bleu ciel dans les champs de saisie */
 input:focus,textarea:focus,select:focus{border-color:#38bdf8}
 input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #38bdf8;outline-offset:2px}
@@ -531,6 +565,14 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px soli
     <div id="pollFields" class="hidden">
       <label for="optionA">Premier choix</label><input id="optionA" maxlength="100" placeholder="POUR">
       <label for="optionB">Deuxième choix</label><input id="optionB" maxlength="100" placeholder="CONTRE">
+      <label for="debateDuration">Durée du débat</label>
+      <select id="debateDuration">
+        <option value="0" selected>Illimitée</option>
+        <option value="24">24 heures</option>
+        <option value="72">3 jours</option>
+        <option value="168">7 jours</option>
+      </select>
+      <p class="notice">Illimitée : on peut débattre à tout moment. Sinon, le débat se ferme tout seul et le résultat final reste affiché.</p>
     </div>
     <div class="row">
       <button class="primary" onclick="publish()">Publier</button>
@@ -570,6 +612,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px soli
     <p class="notice">Le microphone nécessite l'autorisation du navigateur. Les données restent sur cet appareil.</p>
   </section>
 
+  <div id="dailyDebate" class="hidden"></div>
   <div id="feed"></div>
 </section>
 
@@ -623,10 +666,18 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px soli
   <label for="accentColor">Couleur des LOVES</label><input id="accentColor" type="color" value="#ed4dba">
   <label for="homeColor">Couleur ACCUEIL</label><input id="homeColor" type="color" value="#0f766e">
   <label for="friendsColor">Couleur AMI</label><input id="friendsColor" type="color" value="#ea580c">
-  <label for="createColor">Couleur CRÉER</label><input id="createColor" type="color" value="#2563eb">
+  <label for="createColor">Couleur JUNOVAS</label><input id="createColor" type="color" value="#2563eb">
   <label for="messagesColor">Couleur MESSAGE</label><input id="messagesColor" type="color" value="#7c3aed">
   <label for="profileColor">Couleur PROFIL</label><input id="profileColor" type="color" value="#db2777">
+  <label for="voiceColor">Couleur MA VOIX JUNOVA</label><input id="voiceColor" type="color" value="#245fbd">
+  <label for="debatsColor">Couleur DÉBATS</label><input id="debatsColor" type="color" value="#245fbd">
+  <label for="diffusionsColor">Couleur DIFFUSIONS</label><input id="diffusionsColor" type="color" value="#16815f">
+  <label for="expressColor">Couleur S'EXPRIMER</label><input id="expressColor" type="color" value="#c58a25">
+  <label for="publicationAColor">Couleur PUBLICATION LIBRE (début)</label><input id="publicationAColor" type="color" value="#7c3aed">
+  <label for="publicationBColor">Couleur PUBLICATION LIBRE (fin)</label><input id="publicationBColor" type="color" value="#d946ef">
+  <label for="debatLaunchColor">Couleur LANCER UN DÉBAT</label><input id="debatLaunchColor" type="color" value="#16815f">
   <button class="primary full" onclick="applyColors()">Appliquer les couleurs</button>
+  <button class="full" onclick="resetColors()">Réinitialiser les couleurs</button>
   <p class="notice">Les couleurs sont sauvegardées sur cet appareil.</p>
 
   <hr><h3>Favoris</h3>
@@ -989,7 +1040,9 @@ async function publish(){
         document.getElementById('optionB').value.trim()
       ],
       votes:[0,0],
-      voted:false
+      voted:false,
+      endsAt:debateEndsAt(),
+      events:[]
     }:null
   };
 
@@ -1219,6 +1272,191 @@ function findCommentById(comments,id){
   }
 
   return null;
+}
+
+/* ===== Débat vocal : durée, résultat, camp, notifications, débat du jour ===== */
+function debateEndsAt(){
+  const select=document.getElementById('debateDuration');
+  const hours=select?Number(select.value)||0:0;
+  return hours?Date.now()+hours*3600000:null;
+}
+
+function isDebateClosed(poll){
+  return !!(poll&&poll.endsAt&&Date.now()>=Number(poll.endsAt));
+}
+
+function debateTimeLabel(poll){
+  if(!poll||!poll.endsAt)return 'Illimité';
+  const left=Number(poll.endsAt)-Date.now();
+  if(left<=0)return 'Terminé';
+  const minutes=Math.ceil(left/60000);
+  if(minutes<60)return 'Se termine dans '+minutes+' min';
+  const hours=Math.ceil(minutes/60);
+  if(hours<48)return 'Se termine dans '+hours+' h';
+  return 'Se termine dans '+Math.ceil(hours/24)+' j';
+}
+
+function debatePercents(poll){
+  const votes=(poll&&poll.votes)||[];
+  const a=Number(votes[0]||0),b=Number(votes[1]||0);
+  const total=a+b;
+  const pa=total?Math.round(a/total*100):0;
+  return {a:a,b:b,total:total,pa:pa,pb:total?100-pa:0};
+}
+
+function avisCamp(post){
+  if(post&&post.poll&&post.poll.voted&&Number.isInteger(post.poll.votedIndex))return post.poll.votedIndex;
+  return null;
+}
+
+function canGiveAvis(post){
+  if(!post||!post.poll)return true;
+  if(isDebateClosed(post.poll)){
+    alert('Ce débat est terminé : on ne peut plus donner d’avis.');
+    return false;
+  }
+  if(!post.poll.voted){
+    alert('Vote d’abord pour un camp, puis donne ton avis.');
+    return false;
+  }
+  return true;
+}
+
+function noteDebateActivity(post){
+  if(!post||!post.poll)return;
+  const events=Array.isArray(post.poll.events)?post.poll.events:[];
+  events.push(Date.now());
+  post.poll.events=events.slice(-200);
+}
+
+function campTagHTML(post,comment){
+  if(!post||!post.poll||!comment||!Number.isInteger(comment.camp))return '';
+  const name=(post.poll.options||[])[comment.camp];
+  if(!name)return '';
+  return '<span class="camp-tag camp-'+(comment.camp===0?'a':'b')+'">'+esc(name)+'</span>';
+}
+
+function renderDebatePanel(post){
+  const poll=post.poll;
+  const closed=isDebateClosed(poll);
+  const stats=debatePercents(poll);
+  const options=poll.options||[];
+  const showResult=!!poll.voted||closed;
+  const label=function(i){return esc(options[i]||(i===0?'POUR':'CONTRE'));};
+  const buttons=[0,1].map(function(i){
+    const count=i===0?stats.a:stats.b;
+    return '<button type="button" class="camp-'+(i===0?'a':'b')+'" onclick="votePoll(\''+esc(post.id)+'\','+i+')"'
+      +((poll.voted||closed)?' disabled':'')+'>'
+      +(showResult?label(i)+' · '+count+' vote(s)':'Voter '+label(i))
+      +'</button>';
+  }).join('');
+  return '<div class="debate-panel">'
+    +'<div class="debate-top"><h3>🗳️ Débat</h3><span class="debate-time">'+esc(debateTimeLabel(poll))+'</span></div>'
+    +(showResult
+      ?'<div class="result-bar"><div class="res-a" style="width:'+stats.pa+'%"></div><div class="res-b" style="width:'+stats.pb+'%"></div></div>'
+       +'<div class="result-labels"><span class="lab-a">'+label(0)+' '+stats.pa+' %</span><span class="lab-b">'+label(1)+' '+stats.pb+' %</span></div>'
+      :'')
+    +'<div class="row">'+buttons+'</div>'
+    +'<p class="notice">'+stats.total+' voix · 1 vote par personne'
+    +(poll.voted?' · Ton vote a été enregistré sur cet appareil.':'')
+    +(closed?' · Débat terminé.':'')+'</p>'
+    +'</div>';
+}
+
+function pickDailyDebate(){
+  const dayAgo=Date.now()-86400000;
+  let best=null,bestScore=-1,bestDate=0;
+  posts.forEach(function(post){
+    if(!post||!post.poll||isDebateClosed(post.poll))return;
+    const events=Array.isArray(post.poll.events)?post.poll.events:[];
+    const score=events.filter(function(t){return t>=dayAgo;}).length;
+    const created=Date.parse(post.date)||0;
+    if(score>bestScore||(score===bestScore&&created>bestDate)){
+      best=post;bestScore=score;bestDate=created;
+    }
+  });
+  return best;
+}
+
+function goToPost(id){
+  const el=document.getElementById('post-'+id);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderDailyDebate(){
+  const box=document.getElementById('dailyDebate');
+  if(!box)return;
+  const post=pickDailyDebate();
+  if(!post){
+    box.classList.add('hidden');
+    box.innerHTML='';
+    return;
+  }
+  const poll=post.poll;
+  const stats=debatePercents(poll);
+  const options=poll.options||[];
+  const text=String(post.text||'').trim();
+  const question=text.length>140?text.slice(0,140)+'…':(text||'Débat sans titre');
+  const label=function(i){return esc(options[i]||(i===0?'POUR':'CONTRE'));};
+  box.classList.remove('hidden');
+  box.innerHTML='<div class="panel daily-debate">'
+    +'<div class="debate-top"><span class="pill">🗣️ DÉBAT DU JOUR</span><span class="debate-time">'+esc(debateTimeLabel(poll))+'</span></div>'
+    +'<p class="daily-question">'+esc(question)+'</p>'
+    +(poll.voted
+      ?'<div class="result-bar"><div class="res-a" style="width:'+stats.pa+'%"></div><div class="res-b" style="width:'+stats.pb+'%"></div></div>'
+       +'<div class="result-labels"><span class="lab-a">'+label(0)+' '+stats.pa+' %</span><span class="lab-b">'+label(1)+' '+stats.pb+' %</span></div>'
+      :'')
+    +'<p class="notice">'+stats.total+' voix</p>'
+    +'<button type="button" class="full" onclick="goToPost(\''+esc(post.id)+'\')">Voir le débat</button>'
+    +'</div>';
+}
+
+function postTitle(post){
+  const text=String((post&&post.text)||'').trim().replace(/\s+/g,' ');
+  if(!text)return 'sans titre';
+  return text.length>40?text.slice(0,40)+'…':text;
+}
+
+function notifyDebateOwner(post,verb){
+  if(!post)return;
+  const owner=String(post.name||'Membre JUNOVABOOK');
+  const actor=profileName();
+  if(owner===actor)return;
+  const key='post-'+post.id;
+  const now=Date.now();
+  const kind=post.poll?'ton débat':'ta publication';
+  const title=postTitle(post);
+  const existing=activities.find(function(a){return a.groupKey===key&&now-Number(a.groupAt||0)<3600000;});
+  if(existing){
+    const actors=Array.isArray(existing.actors)?existing.actors.slice():[];
+    if(actors.indexOf(actor)===-1)actors.push(actor);
+    const others=actors.length-1;
+    existing.actors=actors;
+    existing.groupAt=now;
+    existing.name=actor;
+    existing.read=false;
+    existing.time=new Date().toLocaleString();
+    existing.text=others>0
+      ?'et '+others+' autre'+(others>1?'s':'')+' personne'+(others>1?'s ont':' a')+' débattu sur '+kind+' « '+title+' ».'
+      :verb+' sur '+kind+' « '+title+' ».';
+    saveJSON(ACTIVITY_STORE,activities);
+    renderActivities();
+    return;
+  }
+  addActivity(verb+' sur '+kind+' « '+title+' ».');
+  const item=activities[0];
+  if(item){
+    item.groupKey=key;
+    item.groupAt=now;
+    item.actors=[actor];
+    saveJSON(ACTIVITY_STORE,activities);
+  }
+}
+
+function autoStopAudioAvis(){
+  if(commentRecorder&&commentRecorder.state==='recording'&&(Date.now()-commentStart)/1000>=60){
+    commentRecorder.stop();
+  }
 }
 
 /* ===== Photo de profil (enregistrée sur cet appareil, par nom affiché) ===== */
@@ -1612,7 +1850,7 @@ function commentNode(post,comment,depth=0){
     <div class="reply ${isReply?'is-reply':''}" id="comment-${esc(comment.id)}">
       <span class="comment-badge">${badge}${audioBadge}</span>
       <div class="comment-head">
-        <strong class="who">${avatarHTML(comment.name||'Membre JUNOVABOOK')}${esc(comment.name||'Membre JUNOVABOOK')}</strong>
+        <strong class="who">${avatarHTML(comment.name||'Membre JUNOVABOOK')}${esc(comment.name||'Membre JUNOVABOOK')}</strong>${campTagHTML(post,comment)}
         <small>${esc(shortDate(comment.date))}</small>
       </div>
 
@@ -1639,6 +1877,7 @@ function renderFeed(){
   const feed=document.getElementById('feed');
   if(!feed)return;
 
+  renderDailyDebate();
   feed.innerHTML='';
 
   if(!posts.length){
@@ -1655,6 +1894,7 @@ function renderFeed(){
 
     const card=document.createElement('article');
     card.className='post';
+    card.id='post-'+post.id;
 
     card.innerHTML=`
       <div class="row" style="align-items:center;justify-content:space-between">
@@ -1668,17 +1908,7 @@ function renderFeed(){
       ${post.text?`<p>${esc(post.text)}</p>`:''}
       ${renderMedia(post.media)}
 
-      ${poll?`
-        <div class="debate-panel">
-          <h3>🗳️ Donne ton avis</h3>
-          ${(poll.options||[]).map((option,i)=>`
-            <button type="button" class="full ${i===0?'blue':'orange'}"
-              onclick="votePoll('${esc(post.id)}',${i})"
-              ${poll.voted?'disabled':''}>
-              ${esc(option)} · ${Number((poll.votes||[])[i]||0)} vote(s)
-            </button>`).join('')}
-          ${poll.voted?'<p class="notice">Ton vote a été enregistré sur cet appareil.</p>':''}
-        </div>`:''}
+      ${poll?renderDebatePanel(post):''}
 
       <div class="actions">
         <button type="button" style="background:var(--accent)"
@@ -1770,6 +2000,8 @@ function addComment(id){
     return;
   }
 
+  if(!canGiveAvis(post))return;
+
   post.comments=post.comments||[];
   post.comments.push({
     id:safeId(),
@@ -1777,8 +2009,10 @@ function addComment(id){
     text,
     media:[],
     children:[],
+    camp:avisCamp(post),
     date:new Date().toLocaleString()
   });
+  noteDebateActivity(post);
 
   if(!persistPosts()){
     post.comments.pop();
@@ -1787,6 +2021,7 @@ function addComment(id){
 
   input.value='';
   addActivity('Un nouveau commentaire a été publié.');
+  notifyDebateOwner(post,'a donné son avis');
   renderFeed();
 
   const panel=document.getElementById('debate-'+id);
@@ -1800,6 +2035,8 @@ function replyToComment(postId,commentId){
   const comment=findCommentById(post.comments,commentId);
   if(!comment)return;
 
+  if(!canGiveAvis(post))return;
+
   const text=prompt('Écris ta réponse à ce commentaire :');
   if(text===null||!text.trim())return;
 
@@ -1811,8 +2048,10 @@ function replyToComment(postId,commentId){
     text:text.trim(),
     media:[],
     children:[],
+    camp:avisCamp(post),
     date:new Date().toLocaleString()
   });
+  noteDebateActivity(post);
 
   if(!persistPosts()){
     comment.children.pop();
@@ -1820,6 +2059,7 @@ function replyToComment(postId,commentId){
   }
 
   addActivity('Une réponse à un commentaire a été publiée.');
+  notifyDebateOwner(post,'a répondu');
   renderFeed();
 
   const panel=document.getElementById('debate-'+postId);
@@ -1852,6 +2092,8 @@ async function openAudioComment(postId){
 
   const post=posts.find(p=>String(p.id)===String(postId));
   if(!post)return;
+
+  if(!canGiveAvis(post))return;
 
   const status=document.getElementById('audio-comment-status-'+postId);
   if(!status)return;
@@ -1888,6 +2130,7 @@ async function openAudioComment(postId){
     commentTimerInterval=setInterval(()=>{
       const timer=document.getElementById('commentTimer');
       if(timer)timer.textContent=formatTime((Date.now()-commentStart)/1000);
+      autoStopAudioAvis();
     },500);
 
     activeRecorder.ondataavailable=e=>{
@@ -1924,8 +2167,10 @@ async function openAudioComment(postId){
           text:'',
           media:[{type:'audio',data}],
           children:[],
+          camp:avisCamp(post),
           date:new Date().toLocaleString()
         });
+        noteDebateActivity(post);
 
         if(!persistPosts()){
           post.comments.pop();
@@ -1936,6 +2181,7 @@ async function openAudioComment(postId){
         megas-=1;
         updateBalances();
         addActivity('Un commentaire audio a été publié · 1 MÉGA utilisé.');
+        notifyDebateOwner(post,'a donné son avis en voix');
         renderFeed();
 
         const panel=document.getElementById('debate-'+postId);
@@ -1983,6 +2229,8 @@ async function startAudioReply(postId,commentId){
   const parent=post&&findCommentById(post.comments,commentId);
   if(!post||!parent)return;
 
+  if(!canGiveAvis(post))return;
+
   const status=document.getElementById('audio-reply-status-'+commentId);
   if(!status)return;
 
@@ -2006,6 +2254,7 @@ async function startAudioReply(postId,commentId){
     commentTimerInterval=setInterval(()=>{
       const timer=document.getElementById('replyTimer-'+commentId);
       if(timer)timer.textContent=formatTime((Date.now()-commentStart)/1000);
+      autoStopAudioAvis();
     },500);
 
     activeRecorder.ondataavailable=e=>{
@@ -2050,8 +2299,10 @@ async function startAudioReply(postId,commentId){
           text:'',
           media:[{type:'audio',data}],
           children:[],
+          camp:avisCamp(currentPost),
           date:new Date().toLocaleString()
         });
+        noteDebateActivity(currentPost);
 
         if(!persistPosts()){
           currentParent.children.pop();
@@ -2062,6 +2313,7 @@ async function startAudioReply(postId,commentId){
         megas-=1;
         updateBalances();
         addActivity('Une réponse audio a été publiée · 1 MÉGA utilisé.');
+        notifyDebateOwner(currentPost,'a répondu en voix');
         renderFeed();
 
         const panel=document.getElementById('debate-'+postId);
@@ -2098,19 +2350,28 @@ function votePoll(id,index){
   const post=posts.find(p=>String(p.id)===String(id));
   if(!post||!post.poll||post.poll.voted)return;
 
+  if(isDebateClosed(post.poll)){
+    alert('Ce débat est terminé : on ne peut plus voter.');
+    return;
+  }
+
   if(index<0||index>1)return;
 
   post.poll.votes=post.poll.votes||[0,0];
   post.poll.votes[index]=(Number(post.poll.votes[index])||0)+1;
   post.poll.voted=true;
+  post.poll.votedIndex=index;
+  noteDebateActivity(post);
 
   if(!persistPosts()){
     post.poll.votes[index]--;
     post.poll.voted=false;
+    delete post.poll.votedIndex;
     return;
   }
 
   addActivity('Ton vote au débat a été enregistré.');
+  notifyDebateOwner(post,'a voté '+((post.poll.options||[])[index]||''));
   renderFeed();
 }
 
@@ -2269,42 +2530,119 @@ function loadProfile(){
   renderProfilePhoto();
 }
 
-function applyColors(){
-  const mapping={
+function colorSettings(){
+  return {
     '--accent':'accentColor',
     '--home':'homeColor',
     '--friends':'friendsColor',
     '--create':'createColor',
     '--messages':'messagesColor',
-    '--profile':'profileColor'
+    '--profile':'profileColor',
+    '--voice':'voiceColor',
+    '--debats':'debatsColor',
+    '--diffusions':'diffusionsColor',
+    '--express':'expressColor',
+    '--pub-a':'publicationAColor',
+    '--pub-b':'publicationBColor',
+    '--debat-launch':'debatLaunchColor'
   };
+}
+
+function colorDefaults(){
+  return {
+    '--accent':'#ed4dba','--home':'#0f766e','--friends':'#ea580c',
+    '--create':'#2563eb','--messages':'#7c3aed','--profile':'#db2777',
+    '--voice':'#245fbd','--debats':'#245fbd','--diffusions':'#16815f',
+    '--express':'#c58a25','--pub-a':'#7c3aed','--pub-b':'#d946ef',
+    '--debat-launch':'#16815f'
+  };
+}
+
+function colorLuminance(hex){
+  const m=/^#?([0-9a-f]{6})$/i.exec(String(hex||'').trim());
+  if(!m)return null;
+  const n=parseInt(m[1],16);
+  const channel=function(v){v=v/255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);};
+  return 0.2126*channel((n>>16)&255)+0.7152*channel((n>>8)&255)+0.0722*channel(n&255);
+}
+
+function contrastText(hex){
+  const L=colorLuminance(hex);
+  if(L===null)return '#ffffff';
+  const whiteRatio=1.05/(L+0.05);
+  const darkRatio=(L+0.05)/0.0556;
+  return darkRatio>whiteRatio?'#111111':'#ffffff';
+}
+
+function setColorVariable(variable,value){
+  const root=document.documentElement;
+  root.style.setProperty(variable,value);
+  const defaults=colorDefaults();
+  if(variable==='--pub-a'||variable==='--pub-b')return;
+  if(String(value).toLowerCase()===defaults[variable]){
+    root.style.removeProperty(variable+'-text');
+  }else{
+    root.style.setProperty(variable+'-text',contrastText(value));
+  }
+}
+
+function updatePublicationText(){
+  const root=document.documentElement;
+  const a=root.style.getPropertyValue('--pub-a')||colorDefaults()['--pub-a'];
+  const b=root.style.getPropertyValue('--pub-b')||colorDefaults()['--pub-b'];
+  const defaults=colorDefaults();
+  if(String(a).toLowerCase()===defaults['--pub-a']&&String(b).toLowerCase()===defaults['--pub-b']){
+    root.style.removeProperty('--pub-text');
+    return;
+  }
+  const la=colorLuminance(a),lb=colorLuminance(b);
+  const average=((la===null?0:la)+(lb===null?0:lb))/2;
+  const whiteRatio=1.05/(average+0.05);
+  const darkRatio=(average+0.05)/0.0556;
+  root.style.setProperty('--pub-text',darkRatio>whiteRatio?'#111111':'#ffffff');
+}
+
+function applyColors(){
+  const mapping=colorSettings();
 
   for(const [variable,id] of Object.entries(mapping)){
     const value=document.getElementById(id).value;
-    document.documentElement.style.setProperty(variable,value);
+    setColorVariable(variable,value);
     localStorage.setItem('junovabook_color_'+variable,value);
   }
+  updatePublicationText();
 
   alert('Les couleurs ont été appliquées et sauvegardées.');
 }
 
+function resetColors(){
+  const mapping=colorSettings();
+  const defaults=colorDefaults();
+  const root=document.documentElement;
+
+  for(const [variable,id] of Object.entries(mapping)){
+    root.style.removeProperty(variable);
+    root.style.removeProperty(variable+'-text');
+    localStorage.removeItem('junovabook_color_'+variable);
+    document.getElementById(id).value=defaults[variable];
+  }
+  root.style.removeProperty('--pub-text');
+
+  alert('Les couleurs d’origine ont été remises.');
+}
+
 function loadColors(){
-  const mapping={
-    '--accent':'accentColor',
-    '--home':'homeColor',
-    '--friends':'friendsColor',
-    '--create':'createColor',
-    '--messages':'messagesColor',
-    '--profile':'profileColor'
-  };
+  const mapping=colorSettings();
 
   for(const [variable,id] of Object.entries(mapping)){
     const value=localStorage.getItem('junovabook_color_'+variable);
     if(value){
-      document.documentElement.style.setProperty(variable,value);
-      document.getElementById(id).value=value;
+      setColorVariable(variable,value);
+      const input=document.getElementById(id);
+      if(input)input.value=value;
     }
   }
+  updatePublicationText();
 }
 
 function claimFreeMegas(){
