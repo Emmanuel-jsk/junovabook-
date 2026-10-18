@@ -1857,17 +1857,26 @@ function removeProfilePhoto(){
 
 /* ----- Lien de profil ----- */
 function profileLinkFor(){
-  const base=location.href.split(/[?#]/)[0];
+  let base='';
+  try{
+    if(location.protocol==='https:'||location.protocol==='http:')base=location.href.split(/[?#]/)[0];
+  }catch(e){}
+  if(!base)return '';
   return base+'?u='+encodeURIComponent(myUserId())+'&n='+encodeURIComponent(profileName());
+}
+
+function profileLinkUnavailable(){
+  alert('Le lien de profil est disponible seulement sur ton site publié, pas dans un aperçu.');
 }
 
 function renderProfileLink(){
   const input=document.getElementById('profileLink');
-  if(input)input.value=profileLinkFor();
+  if(input)input.value=profileLinkFor()||'Disponible sur ton site publié (pas dans un aperçu)';
 }
 
 function copyProfileLink(){
   const link=profileLinkFor();
+  if(!link){profileLinkUnavailable();return;}
   const fallback=function(){
     const input=document.getElementById('profileLink');
     try{
@@ -1886,6 +1895,7 @@ function copyProfileLink(){
 
 async function shareProfileLink(){
   const link=profileLinkFor();
+  if(!link){profileLinkUnavailable();return;}
   if(navigator.share){
     try{
       await navigator.share({title:'Mon profil JUNOVABOOK',text:profileName()+' sur JUNOVABOOK',url:link});
